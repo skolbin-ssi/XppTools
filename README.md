@@ -10,6 +10,8 @@ This repository contains 3 D365FO models:
     - [-Display system field name in the query filter](#-display-system-field-name-in-the-query-filter)
     - [-Display table relation fields](#-display-table-relation-fields)
     - [-Editable table browser](#-editable-table-browser)
+    - [-List of Values to Range](#-list-of-values-to-range)
+    - [-Execute direct SQL in D365FO database](#-execute-direct-sql-in-d365fo-database)
   - [DEVCommon model](#devcommon-model)
     - [-DEV class](#-dev-class)
     - [-DEVDimensionHelper class](#-devdimensionhelper-class)
@@ -18,7 +20,11 @@ This repository contains 3 D365FO models:
     - [-Blocking in D365FO](#-blocking-in-d365fo)
     - [-Create ledger journals using X++](#-create-ledger-journals-using-x)
     - [-Create ledger journal from Excel file](#-create-ledger-journal-from-excel-file)
+    - [-Parallel batch processing in X++](#-parallel-batch-processing-in-x)
+  - [DEVTutorialReports submodel](#devtutorialreports-submodel)
     - [-Sales Invoice report](#-sales-invoice-report)
+  - [DEVTutorialIntegration submodel](#devtutorialintegration-submodel)
+    - [-File-based integration in Dynamics 365 FinOps using X++](#-file-based-integration-in-dynamics-365-finops-using-x)
   - [Installation](#installation)
   - [Contribution](#contribution)
 
@@ -59,8 +65,32 @@ Sub-model name: DEVSysQueryFormAddRelInfo
 
 Extension for the standard D365FO table browser that allows root navigation and editing for non-development environments.
 
+Test link https://usnconeboxax1aos.cloud.onebox.dynamics.com/?cmp=USMF&mi=DEVSysTableBrowser&tablename=custgroup. A user should be in the group "DEV Editable table browser"
+
 Full description: [Editable table browser](https://denistrunin.com/xpptools-devtablebrowser/). Sub-model name: DEVSysTableBrowser
 
+### -List of Values to Range 
+
+This functionality is intended to help users deal with list of values in query range. With help of this tool you can:
+
+- Copy list of values from, for example, excel and paste it in a range;
+- Easily manage values of existed range
+
+Full description: [List of Values to Range](https://denistrunin.com/xpptools-listvaluestorange/)
+Sub-model name: DEVListOfValuesToRange
+
+![](assets/DEVListOfValuesToRange.png)
+
+**[⬆ back to top](#XppTools)**
+
+### -Execute direct SQL in D365FO database
+
+'Execute direct SQL' is a simple form that allows to write and execute direct SQL from the browser on D365FO database.
+
+Full description: [Execute direct SQL in D365FO database](https://denistrunin.com/xpptools-sqlexecute/)
+Sub-model name: DEVSQLExecute
+
+![](assets/DEVSQLExecute.png)
 
 **[⬆ back to top](#XppTools)**
 
@@ -106,13 +136,27 @@ Class **[DEVTutorialCreateLedgerJournal](https://github.com/TrudAX/XppTools/blob
 
 Class [**DEVReadFromFileExampleCreateJournal**](https://github.com/TrudAX/XppTools/blob/master/DEVTutorial/DEVTutorial/AxClass/DEVReadFromFileExampleCreateJournal.xml)  - sample code to create a ledger journal from Excel file
 
-## DEVTutorialReports model
+### -Parallel batch processing in X++
+
+Classes [DEVTutorialBatchSingleThread](https://github.com/TrudAX/XppTools/blob/master/DEVTutorial/DEVTutorial/AxClass/DEVTutorialBatchSingleThread.xml), [DEVTutorialBatchMultipleThreadBase](https://github.com/TrudAX/XppTools/blob/master/DEVTutorial/DEVTutorial/AxClass/DEVTutorialBatchMultipleThreadBase.xml),  [DEVTutorialBatchMultipleThread](https://github.com/TrudAX/XppTools/blob/master/DEVTutorial/DEVTutorial/AxClass/DEVTutorialBatchMultipleThread.xml) that demonstrates how you can convert your existing batch job to multi-threaded.
+
+[A simple way to implement a parallel batch processing in X++](https://denistrunin.com/xpptutorial-batchmultithread/)
+
+## DEVTutorialReports submodel
 
 Contains report development examples
 
 ### -Sales Invoice report
 
 A sample code to Create a new design for Sales Invoice report in D365FO (https://denistrunin.com/xpptools-reportsalesinvoice/)
+
+## DEVTutorialIntegration submodel
+
+Contains integration [samples](https://github.com/TrudAX/XppTools/tree/master/DEVTutorial/DEVTutorialIntegration)
+
+### -File-based integration in Dynamics 365 FinOps using X++
+
+A sample code for implementing file-based integration in Dynamics 365 FinOps using X++. Create Ledger journals based on periodic import of Excel/CSV files from Azure storage   (https://denistrunin.com/xpptools-fileintegledger/). Test files for Demo database [here](https://github.com/TrudAX/XppTools/blob/master/assets/TestPeriodicLedgerJournalImport.zip)
 
 **[⬆ back to top](#XppTools)**
 

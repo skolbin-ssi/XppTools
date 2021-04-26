@@ -42,7 +42,7 @@ class DEVDimensionHelper
     {
         //place code here to override default values
         //see DEVDimNamesReference table
-        //like BusinessUnit = myParmTable.BusinessUnit
+        //e.g. BusinessUnit = myParmTable.BusinessUnit
     }
 
 ]]></Source>
@@ -55,19 +55,45 @@ class DEVDimensionHelper
     //INTERNAL STRUCTURE 
     //https://docs.microsoft.com/en-us/dynamics365/unified-operations/dev-itpro/financial/ledgeraccountcombinations
 
-    //FILTER VALUES
-    //SysQuery::addDimensionAttributeRange(
-
     //EXTRACT VALUES
     //--Value str from DefaultDimension
     static DimensionValue getValueByDefaultDimension(DimensionDefault  _dimensionDefault, Name _dimensionName)
     {
-        DimensionAttributeValueSetStorage  dimStorage;
         DimensionValue                     res;
+        FieldId fieldIdDim = DimensionAttributeValueSet::getDimensionValueFieldId(_dimensionName);
+        if (fieldIdDim)
+        {
+            DimensionAttributeValueSet dimValueTable = DimensionAttributeValueSet::find(_dimensionDefault);
+            if (dimValueTable.RecId)
+            {
+                res = dimValueTable.(fieldIdDim);
+            }
+        }
+        //this is a standard 'slow' version
+        //DimensionAttributeValueSetStorage  dimStorage;
+        //dimStorage = DimensionAttributeValueSetStorage::find(_dimensionDefault);
+        //res = dimStorage.getDisplayValueByDimensionAttribute(DimensionAttribute::findByName(_dimensionName).RecId);
 
-        dimStorage = DimensionAttributeValueSetStorage::find(_dimensionDefault);
-        res = dimStorage.getDisplayValueByDimensionAttribute(DimensionAttribute::findByName(_dimensionName).RecId);
+        return res;
+    }
 
+]]></Source>
+			</Method>
+			<Method>
+				<Name>getValueByLedgerDimension</Name>
+				<Source><![CDATA[
+    static DimensionValue getValueByLedgerDimension(LedgerDimensionAccount  _dimensionDefault, Name _dimensionName)
+    {
+        DimensionValue                     res;
+        FieldId fieldIdDim = DimensionAttributeValueCombination::getDimensionValueFieldId(_dimensionName);
+        if (fieldIdDim)
+        {
+            DimensionAttributeValueCombination dimValueTable = DimensionAttributeValueCombination::find(_dimensionDefault);
+            if (dimValueTable.RecId)
+            {
+                res = dimValueTable.(fieldIdDim);
+            }
+        }
         return res;
     }
 
@@ -106,11 +132,32 @@ class DEVDimensionHelper
 ]]></Source>
 			</Method>
 			<Method>
+				<Name>setValueToDefaultDimensionCon</Name>
+				<Source><![CDATA[
+    static DimensionDefault setValueToDefaultDimensionCon(DimensionDefault _dimensionDefault,container _dimensionNameValueCon)
+    {
+        DimensionDefault    res = _dimensionDefault;
+        int                 i;
+        
+        for (i = 1; i <= conLen(_dimensionNameValueCon); i += 2)
+        {
+            res = DEVDimensionHelper::setValueToDefaultDimension(res, conPeek(_dimensionNameValueCon, i), conPeek(_dimensionNameValueCon, i + 1));
+        }
+        return res;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
 				<Name>setDefaultDimensionRecId</Name>
 				<Source><![CDATA[
+    //FILTER VALUES
+    //SysQuery::addDimensionAttributeRange(
+
     //To filter by dimension value
     //https://www.1clickfactory.com/blog/microsoft-dynamics-365-changes-to-financial-dimensions-structure/
     /*
+    DimensionAttributeValueSet  davs;
     businessUnitId = DimensionAttributeValueCombination::getDimensionValueFieldId(DEVDimensionHelper::BusinessUnit);
     while select ProjId from projTable
     exists join davs

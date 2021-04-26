@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>TST_CreateLedgerFile</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+using System.IO;
+
+class TST_CreateLedgerFile
+{
+    DEVTutorialCombinationGenerator   combinationAccountCred; 
+    DEVTutorialCombinationGenerator   combinationAccountDeb;
+
+    DEVIntegMessageTypeInbound          messageTypeInbound;
+
+    DEVIntegAzureStorageConnectionHelper        azureStorageConnectionHelper;
+
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>parmMessageTypeInbound</Name>
+				<Source><![CDATA[
+    public DEVIntegMessageTypeInbound parmMessageTypeInbound(DEVIntegMessageTypeInbound _integMessageTypeInbound = messageTypeInbound)
+    {
+        messageTypeInbound = _integMessageTypeInbound;
+        return messageTypeInbound;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>generateFile</Name>
+				<Source><![CDATA[
+    public void generateFile(Filename _fileName, int _lineCountInFile)
+    {
+        int     linePerDeb = 4;
+        int     curLineInDeb;
+        int     i;
+        container  c;
+
+
+        DEVFileWriterExcel      writerExcel = new DEVFileWriterExcel();
+        c = ['MainAccount', 'BusinessUnit', 'Department', 'CostCenter', 'Amount'];
+        writerExcel.addContainerLine(c);
+
+        curLineInDeb = 1;
+        for (i = 1; i <= _lineCountInFile; i++)
+        {
+            combinationAccountCred.moveToNext();
+            //create cred
+            c = [combinationAccountCred.getLevelValue('MainAccount'), combinationAccountCred.getLevelValue('BusinessUnit'), 
+                    combinationAccountCred.getLevelValue('Department'), combinationAccountCred.getLevelValue('CostCenter'), -1];
+            writerExcel.addContainerLine(c);
+
+            curLineInDeb++;
+            if (curLineInDeb > linePerDeb)
+            {
+                combinationAccountDeb.moveToNext();
+                //create deb with curLineInDeb-1
+                c = [combinationAccountDeb.getLevelValue('MainAccount'), combinationAccountDeb.getLevelValue('BusinessUnit'),
+                    combinationAccountDeb.getLevelValue('Department'), combinationAccountDeb.getLevelValue('CostCenter'), curLineInDeb-1];
+                writerExcel.addContainerLine(c);
+
+                curLineInDeb = 1;
+                i++;
+            }
+        }
+        if (curLineInDeb > 1)
+        {
+            combinationAccountDeb.moveToNext();
+            //create deb with curLineInDeb-1
+            c = [combinationAccountDeb.getLevelValue('MainAccount'), combinationAccountDeb.getLevelValue('BusinessUnit'),
+                    combinationAccountDeb.getLevelValue('Department'), combinationAccountDeb.getLevelValue('CostCenter'), curLineInDeb-1];
+            writerExcel.addContainerLine(c);
+        }
+        System.IO.MemoryStream   memStream;
+
+        if (conPeek(Docu::splitFilename(_filename), 2) == 'csv')
+        {
+            memStream = writerExcel.getCSVStream();
+        }
+        else
+        {
+            writerExcel.createExcelDocument();
+            writerExcel.doExcelOutput('A1');
+            memStream = writerExcel.finishOutputGetStream();
+        }
+        memStream.Position = 0;
+
+        if (messageTypeInbound.RecId) //create to Azure
+        {
+            if (! azureStorageConnectionHelper)
+            {
+                azureStorageConnectionHelper = DEVIntegAzureStorageConnectionHelper::construct(messageTypeInbound);
+                azureStorageConnectionHelper.connect();
+            }
+            azureStorageConnectionHelper.createFileInDirectory(_fileName, messageTypeInbound.ReadLocation, memStream);
+        }
+        else
+        {
+            FileStream fileStream = new FileStream(_fileName, FileMode::Create, System.IO.FileAccess::Write);
+            //StreamWriter fileStream = new StreamWriter(_fileName, false, System.Text.Encoding::UTF8);
+            memStream.CopyTo(fileStream);
+            fileStream.Close();
+        }
+        memStream.Close();
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>initCombinationData</Name>
+				<Source><![CDATA[
+    public void initCombinationData()
+    {
+        Query                             query;
+
+        MainAccount     mainAccount;
+        container       mainAccountCon;
+
+        combinationAccountCred = new DEVTutorialCombinationGenerator();
+        combinationAccountDeb = new DEVTutorialCombinationGenerator();
+
+        query = new Query();
+        query.addDataSource(tableNum(DimAttributeOMBusinessUnit));
+        combinationAccountCred.addLevelFromQuery('BusinessUnit', query, fieldNum(DimAttributeOMBusinessUnit, Value));
+        combinationAccountDeb.addLevelFromQuery('BusinessUnit', query, fieldNum(DimAttributeOMBusinessUnit, Value));
+
+        query = new Query();
+        query.addDataSource(tableNum(DimAttributeOMDepartment));
+        combinationAccountCred.addLevelFromQuery('Department',  query, fieldNum(DimAttributeOMDepartment, Value));
+        combinationAccountDeb.addLevelFromQuery('Department',  query, fieldNum(DimAttributeOMDepartment, Value));
+        
+        query = new Query();
+        query.addDataSource(tableNum(DimAttributeOMCostCenter));
+        combinationAccountCred.addLevelFromQuery('CostCenter',  query, fieldNum(DimAttributeOMCostCenter, Value));
+        combinationAccountDeb.addLevelFromQuery('CostCenter',  query, fieldNum(DimAttributeOMCostCenter, Value));
+
+        mainAccountCon = conNull();
+        while select mainAccount
+            where mainAccount.MainAccountId like '60*' &&
+                  mainAccount.Type == DimensionLedgerAccountType::Expense  &&
+                  mainAccount.LedgerChartOfAccounts == LedgerChartOfAccounts::current() &&
+                  mainAccount.PostingType != LedgerPostingType::Tax
+        {
+            mainAccountCon += mainAccount.MainAccountId;
+        }
+        combinationAccountCred.addLevel('MainAccount', mainAccountCon);
+
+        mainAccountCon = conNull();
+        while select mainAccount
+            where mainAccount.MainAccountId like '500*' &&
+                  mainAccount.Type == DimensionLedgerAccountType::Expense   &&
+                  mainAccount.LedgerChartOfAccounts == LedgerChartOfAccounts::current() &&
+                  mainAccount.PostingType != LedgerPostingType::Tax
+        {
+            mainAccountCon += mainAccount.MainAccountId;
+        }
+        combinationAccountDeb.addLevel('MainAccount', mainAccountCon);
+        
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>run</Name>
+				<Source><![CDATA[
+    public void run()
+    {
+        
+        this.initCombinationData();
+        //this.generateFile(@"C:\AAA\Integ\Jour0001.xlsx", 10);
+        //this.generateFile(@"C:\AAA\Integ\Jour0001.csv", 20);
+        this.createMultipleFiles(@"C:\AAA\Integ\BigTest\Jour%1.csv", 2000, 500);
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>createMultipleFiles</Name>
+				<Source><![CDATA[
+    public void createMultipleFiles(str _nameTemplate, int _numberOfFiles, int  _recordsInFile)
+    {
+        int     i;
+        str     fileName;
+        for (i = 1; i <= _numberOfFiles; i++)
+        {
+            fileName = strFmt(_nameTemplate, num2Str0(i, 5, 0));
+            this.generateFile(fileName, _recordsInFile);
+        }
+        info(strFmt("%1 files created", _numberOfFiles));
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>main</Name>
+				<Source><![CDATA[
+    public static void main(Args _args)
+    {
+        TST_CreateLedgerFile  runObj = new TST_CreateLedgerFile();
+        runObj.run();
+
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>
