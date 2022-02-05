@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxTable xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>DEVIntegConnectionType</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+public class DEVIntegConnectionType extends common
+{
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>find</Name>
+				<Source><![CDATA[
+    public static DEVIntegConnectionType find(DEVIntegConnectionTypeId  _connectionTypeId,
+                                              boolean                   _forUpdate = false)
+    {
+        DEVIntegConnectionType integConnectionType;
+        ;
+        if (_connectionTypeId)
+        {
+            integConnectionType.selectForUpdate(_forUpdate);
+            
+            select firstonly integConnectionType
+                where integConnectionType.ConnectionTypeId  == _connectionTypeId;
+        }
+        
+        return integConnectionType;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>getConnectionString</Name>
+				<Source><![CDATA[
+    public DEVIntegAzureConnectionString getConnectionString()
+    {
+        DEVIntegAzureConnectionString  res;
+        switch(this.ConnectionStringSource)
+        {
+            case DEVIntegConnectionStringSource::ManualEntry:
+                res = this.AzureConnectionString;
+                break;
+            case DEVIntegConnectionStringSource::KeyVault:
+                if (this.KeyVaultName)
+                {
+                    res = KeyVaultCertificateHelper::getManualSecretValue(KeyVaultCertificateTable::findByName(this.KeyVaultName).RecId);
+                }
+                break;
+
+        }
+
+        return res;
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+	<Label>Connection Types</Label>
+	<SubscriberAccessLevel>
+		<Read>Allow</Read>
+	</SubscriberAccessLevel>
+	<TitleField1>ConnectionTypeId</TitleField1>
+	<TitleField2>KeyVaultName</TitleField2>
+	<CacheLookup>Found</CacheLookup>
+	<ModifiedBy>Yes</ModifiedBy>
+	<ModifiedDateTime>Yes</ModifiedDateTime>
+	<ReplacementKey>ConnectionTypeIdIdx</ReplacementKey>
+	<SaveDataPerCompany>No</SaveDataPerCompany>
+	<TableContents>BaseData</TableContents>
+	<DeleteActions />
+	<FieldGroups>
+		<AxTableFieldGroup>
+			<Name>AutoReport</Name>
+			<Fields>
+				<AxTableFieldGroupField>
+					<DataField>KeyVaultName</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>ConnectionTypeId</DataField>
+				</AxTableFieldGroupField>
+			</Fields>
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>AutoLookup</Name>
+			<Fields>
+				<AxTableFieldGroupField>
+					<DataField>ConnectionTypeId</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>KeyVaultName</DataField>
+				</AxTableFieldGroupField>
+			</Fields>
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>AutoIdentification</Name>
+			<AutoPopulate>Yes</AutoPopulate>
+			<Fields>
+				<AxTableFieldGroupField>
+					<DataField>ConnectionTypeId</DataField>
+				</AxTableFieldGroupField>
+			</Fields>
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>AutoSummary</Name>
+			<Fields />
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>AutoBrowse</Name>
+			<Fields />
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>GridGroup</Name>
+			<Label>@SYS9039</Label>
+			<Fields>
+				<AxTableFieldGroupField>
+					<DataField>ConnectionTypeId</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>KeyVaultName</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>ConnectionTypeResource</DataField>
+				</AxTableFieldGroupField>
+			</Fields>
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>ConnectionDetail</Name>
+			<Label>Connection string</Label>
+			<Fields>
+				<AxTableFieldGroupField>
+					<DataField>ConnectionStringSource</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>AzureConnectionString</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>KeyVaultName</DataField>
+				</AxTableFieldGroupField>
+			</Fields>
+		</AxTableFieldGroup>
+	</FieldGroups>
+	<Fields>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldString">
+			<Name>ConnectionTypeId</Name>
+			<AllowEdit>No</AllowEdit>
+			<ExtendedDataType>DEVIntegConnectionTypeId</ExtendedDataType>
+			<IgnoreEDTRelation>Yes</IgnoreEDTRelation>
+			<Mandatory>Yes</Mandatory>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldString">
+			<Name>Name</Name>
+			<ExtendedDataType>Name</ExtendedDataType>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldString">
+			<Name>AzureConnectionString</Name>
+			<ExtendedDataType>DEVIntegAzureConnectionString</ExtendedDataType>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldEnum">
+			<Name>ConnectionTypeResource</Name>
+			<EnumType>DEVIntegConnectionTypeResource</EnumType>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldEnum">
+			<Name>ConnectionStringSource</Name>
+			<EnumType>DEVIntegConnectionStringSource</EnumType>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldString">
+			<Name>KeyVaultName</Name>
+			<ExtendedDataType>Name</ExtendedDataType>
+			<HelpText>Key vault link</HelpText>
+			<Label>Key vault</Label>
+		</AxTableField>
+	</Fields>
+	<FullTextIndexes />
+	<Indexes>
+		<AxTableIndex>
+			<Name>ConnectionTypeIdIdx</Name>
+			<AlternateKey>Yes</AlternateKey>
+			<Fields>
+				<AxTableIndexField>
+					<DataField>ConnectionTypeId</DataField>
+				</AxTableIndexField>
+			</Fields>
+		</AxTableIndex>
+	</Indexes>
+	<Mappings />
+	<Relations>
+		<AxTableRelation>
+			<Name>KeyVaultCertificateTable</Name>
+			<Cardinality>ZeroMore</Cardinality>
+			<OnDelete>Restricted</OnDelete>
+			<RelatedTable>KeyVaultCertificateTable</RelatedTable>
+			<RelatedTableCardinality>ZeroOne</RelatedTableCardinality>
+			<RelationshipType>Association</RelationshipType>
+			<Constraints>
+				<AxTableRelationConstraint xmlns=""
+					i:type="AxTableRelationConstraintField">
+					<Name>KeyVaultName</Name>
+					<Field>KeyVaultName</Field>
+					<RelatedField>Name</RelatedField>
+				</AxTableRelationConstraint>
+				<AxTableRelationConstraint xmlns=""
+					i:type="AxTableRelationConstraintRelatedFixed">
+					<Name>KeyVaultCertificateType</Name>
+					<RelatedField>KeyVaultCertificateType</RelatedField>
+					<ValueStr>KeyVaultCertificateType::Manual</ValueStr>
+				</AxTableRelationConstraint>
+			</Constraints>
+		</AxTableRelation>
+	</Relations>
+	<StateMachines />
+</AxTable>

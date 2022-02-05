@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>DEVIntegTutorialSOHeaderLinesContract</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+[DataContractAttribute('lines')]
+class DEVIntegTutorialSOHeaderLinesContract
+{
+    private real            lineQuantity;
+    private real            linePrice;
+    private str             lineDescription;
+    private str             lineItemBarcode;
+
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>parmLineQuantity</Name>
+				<Source><![CDATA[
+    [DataMemberAttribute('lineQuantity')]
+    public real parmLineQuantity(real _lineQuantity = lineQuantity)
+    {
+        lineQuantity = _lineQuantity;
+    
+        return lineQuantity;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>parmLinePrice</Name>
+				<Source><![CDATA[
+    [DataMemberAttribute('linePrice')]
+    public real parmLinePrice(real _linePrice = linePrice)
+    {
+        linePrice = _linePrice;
+    
+        return linePrice;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>parmLineDescription</Name>
+				<Source><![CDATA[
+    [DataMemberAttribute('lineDescription')]
+    public str parmLineDescription(str _lineDescription = lineDescription)
+    {
+        lineDescription = _lineDescription;
+    
+        return lineDescription;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>parmLineItemBarcode</Name>
+				<Source><![CDATA[
+    [DataMemberAttribute('lineItemBarcode')]
+    public str parmLineItemBarcode(str _lineItemBarcode = lineItemBarcode)
+    {
+        lineItemBarcode = _lineItemBarcode;
+    
+        return lineItemBarcode;
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

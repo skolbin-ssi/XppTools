@@ -1,0 +1,553 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxForm xmlns:i="http://www.w3.org/2001/XMLSchema-instance" xmlns="Microsoft.Dynamics.AX.Metadata.V6">
+	<Name>DEVIntegExportDocumentLog</Name>
+	<SourceCode>
+		<Methods xmlns="">
+			<Method>
+				<Name>classDeclaration</Name>
+				<Source><![CDATA[
+[Form]
+public class DEVIntegExportDocumentLog extends FormRun
+{
+}
+]]></Source>
+			</Method>
+		</Methods>
+		<DataSources xmlns="">
+			<DataSource>
+				<Name>DEVIntegExportDocumentLog</Name>
+				<Methods>
+					<Method>
+						<Name>init</Name>
+						<Source><![CDATA[
+        public void init()
+        {
+            super();
+            DEVIntegExportDocumentLog_ds.queryBuildDataSource().addSortField(fieldNum(DEVIntegExportDocumentLog, StatusChangeDate), SortOrder::Descending);
+        }
+
+]]></Source>
+					</Method>
+				</Methods>
+				<Fields />
+			</DataSource>
+			<DataSource>
+				<Name>DEVIntegMessageDataOutbound</Name>
+				<Methods>
+					<Method>
+						<Name>init</Name>
+						<Source><![CDATA[
+        public void init()
+        {
+            super();
+
+            DEVIntegMessageDataOutbound_ds.queryBuildDataSource().addSortField(fieldNum(DEVIntegMessageDataOutbound, CreatedDateTime), SortOrder::Descending);
+        }
+
+]]></Source>
+					</Method>
+				</Methods>
+				<Fields />
+			</DataSource>
+		</DataSources>
+		<DataControls xmlns="">
+			<Control>
+				<Name>ExportButton</Name>
+				<Type>Button</Type>
+				<Methods>
+					<Method>
+						<Name>clicked</Name>
+						<Source><![CDATA[
+        void clicked()
+        {
+            ;
+            DEVIntegExportDocumentsLog::exportSelectedRecords(DEVIntegExportDocumentLog);
+        }
+
+]]></Source>
+					</Method>
+				</Methods>
+			</Control>
+		</DataControls>
+		<Members xmlns="" />
+	</SourceCode>
+	<DataSources>
+		<AxFormDataSource xmlns="">
+			<Name>DEVIntegExportDocumentLog</Name>
+			<Table>DEVIntegExportDocumentLog</Table>
+			<Fields>
+				<AxFormDataSourceField>
+					<DataField>ClassName</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>CompanyId</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>Confirmed</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>ConfirmedDate</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>ConfirmedMessageID</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>createdBy</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>createdDateTime</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>DocumentId</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>ExportStatus</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>InProgress</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>IsRemoved</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>MessageTypeIdOutbound</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>modifiedBy</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>modifiedDateTime</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>Partition</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>RecId</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>RefRecId</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>RefTableId</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>SendMessageID</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>StatusChangeDate</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>TableId</DataField>
+				</AxFormDataSourceField>
+			</Fields>
+			<ReferencedDataSources />
+			<AllowCreate>No</AllowCreate>
+			<AllowEdit>No</AllowEdit>
+			<DataSourceLinks />
+			<DerivedDataSources />
+		</AxFormDataSource>
+		<AxFormDataSource xmlns="">
+			<Name>DEVIntegMessageDataOutbound</Name>
+			<Table>DEVIntegMessageDataOutbound</Table>
+			<Fields>
+				<AxFormDataSourceField>
+					<DataField>CreatedBy</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>CreatedDateTime</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>ExportLogRefRecId</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>FileData</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>FileDataStr</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>ModifiedBy</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>ModifiedDateTime</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>Partition</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>RecId</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>TableId</DataField>
+				</AxFormDataSourceField>
+			</Fields>
+			<ReferencedDataSources />
+			<JoinSource>DEVIntegExportDocumentLog</JoinSource>
+			<AllowCreate>No</AllowCreate>
+			<AllowDelete>No</AllowDelete>
+			<AllowEdit>No</AllowEdit>
+			<Index>ExportLogIdIdx</Index>
+			<DataSourceLinks />
+			<DerivedDataSources />
+		</AxFormDataSource>
+	</DataSources>
+	<Design>
+		<Caption xmlns="">Export Log</Caption>
+		<DataSource xmlns="">DEVIntegExportDocumentLog</DataSource>
+		<HeightMode xmlns="">Column</HeightMode>
+		<Pattern xmlns="">Task</Pattern>
+		<PatternVersion xmlns="">1.2</PatternVersion>
+		<SetCompany xmlns="">No</SetCompany>
+		<TitleDataSource xmlns="">DEVIntegExportDocumentLog</TitleDataSource>
+		<WidthMode xmlns="">Column</WidthMode>
+		<Controls xmlns="">
+			<AxFormControl xmlns=""
+				i:type="AxFormActionPaneControl">
+				<Name>ActionPane</Name>
+				<ElementPosition>715827882</ElementPosition>
+				<FilterExpression>%1</FilterExpression>
+				<Type>ActionPane</Type>
+				<VerticalSpacing>-1</VerticalSpacing>
+				<FormControlExtension
+					i:nil="true" />
+				<Controls>
+					<AxFormControl xmlns=""
+						i:type="AxFormButtonGroupControl">
+						<Name>ButtonGroup</Name>
+						<ElementPosition>1789569705</ElementPosition>
+						<FilterExpression>%1</FilterExpression>
+						<HeightMode>Auto</HeightMode>
+						<Type>ButtonGroup</Type>
+						<VerticalSpacing>-1</VerticalSpacing>
+						<WidthMode>Auto</WidthMode>
+						<FormControlExtension
+							i:nil="true" />
+						<Controls>
+							<AxFormControl xmlns=""
+								i:type="AxFormButtonControl">
+								<Name>ExportButton</Name>
+								<ElementPosition>1431655764</ElementPosition>
+								<FilterExpression>%1</FilterExpression>
+								<HeightMode>Auto</HeightMode>
+								<Type>Button</Type>
+								<VerticalSpacing>-1</VerticalSpacing>
+								<WidthMode>Auto</WidthMode>
+								<FormControlExtension
+									i:nil="true" />
+								<MultiSelect>Yes</MultiSelect>
+								<NeedsRecord>Yes</NeedsRecord>
+								<Text>Export records</Text>
+							</AxFormControl>
+						</Controls>
+						<ArrangeMethod>Vertical</ArrangeMethod>
+					</AxFormControl>
+				</Controls>
+				<AlignChild>No</AlignChild>
+				<AlignChildren>No</AlignChildren>
+				<ArrangeMethod>Vertical</ArrangeMethod>
+			</AxFormControl>
+			<AxFormControl xmlns=""
+				i:type="AxFormTabControl">
+				<Name>DetailsTab</Name>
+				<Type>Tab</Type>
+				<FormControlExtension
+					i:nil="true" />
+				<Controls>
+					<AxFormControl xmlns=""
+						i:type="AxFormTabPageControl">
+						<Name>OverviewTabPageControl</Name>
+						<Pattern>ToolbarList</Pattern>
+						<PatternVersion>1.2</PatternVersion>
+						<Type>TabPage</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<Controls>
+							<AxFormControl xmlns=""
+								i:type="AxFormGroupControl">
+								<Name>CustomFilterGroup</Name>
+								<Pattern>CustomFilters</Pattern>
+								<PatternVersion>1.1</PatternVersion>
+								<Type>Group</Type>
+								<WidthMode>SizeToAvailable</WidthMode>
+								<FormControlExtension
+									i:nil="true" />
+								<Controls>
+									<AxFormControl>
+										<Name>QuickFilterControl</Name>
+										<WidthMode>SizeToAvailable</WidthMode>
+										<FormControlExtension>
+											<Name>QuickFilterControl</Name>
+											<ExtensionComponents />
+											<ExtensionProperties>
+												<AxFormControlExtensionProperty>
+													<Name>targetControlName</Name>
+													<Type>String</Type>
+													<TypeName>str</TypeName>
+													<Value>Grid</Value>
+												</AxFormControlExtensionProperty>
+												<AxFormControlExtensionProperty>
+													<Name>defaultColumnName</Name>
+													<Type>String</Type>
+													<TypeName>str</TypeName>
+												</AxFormControlExtensionProperty>
+												<AxFormControlExtensionProperty>
+													<Name>placeholderText</Name>
+													<Type>String</Type>
+												</AxFormControlExtensionProperty>
+											</ExtensionProperties>
+										</FormControlExtension>
+									</AxFormControl>
+								</Controls>
+								<ArrangeMethod>HorizontalLeft</ArrangeMethod>
+								<FrameType>None</FrameType>
+								<Style>CustomFilter</Style>
+								<ViewEditMode>Edit</ViewEditMode>
+							</AxFormControl>
+							<AxFormControl xmlns=""
+								i:type="AxFormGridControl">
+								<Name>Grid</Name>
+								<ElementPosition>1431655764</ElementPosition>
+								<FilterExpression>%1</FilterExpression>
+								<Type>Grid</Type>
+								<VerticalSpacing>-1</VerticalSpacing>
+								<FormControlExtension
+									i:nil="true" />
+								<Controls>
+									<AxFormControl xmlns=""
+										i:type="AxFormGroupControl">
+										<Name>OverviewNoResponse</Name>
+										<Type>Group</Type>
+										<FormControlExtension
+											i:nil="true" />
+										<Controls>
+											<AxFormControl xmlns=""
+												i:type="AxFormStringControl">
+												<Name>OverviewNoResponse_MessageTypeIdOutbound</Name>
+												<Type>String</Type>
+												<FormControlExtension
+													i:nil="true" />
+												<DataField>MessageTypeIdOutbound</DataField>
+												<DataSource>DEVIntegExportDocumentLog</DataSource>
+											</AxFormControl>
+											<AxFormControl xmlns=""
+												i:type="AxFormStringControl">
+												<Name>OverviewNoResponse_CompanyId</Name>
+												<Type>String</Type>
+												<FormControlExtension
+													i:nil="true" />
+												<DataField>CompanyId</DataField>
+												<DataSource>DEVIntegExportDocumentLog</DataSource>
+											</AxFormControl>
+											<AxFormControl xmlns=""
+												i:type="AxFormStringControl">
+												<Name>OverviewNoResponse_DocumentId</Name>
+												<Type>String</Type>
+												<FormControlExtension
+													i:nil="true" />
+												<DataField>DocumentId</DataField>
+												<DataSource>DEVIntegExportDocumentLog</DataSource>
+											</AxFormControl>
+											<AxFormControl xmlns=""
+												i:type="AxFormComboBoxControl">
+												<Name>OverviewNoResponse_ExportStatus</Name>
+												<Type>ComboBox</Type>
+												<FormControlExtension
+													i:nil="true" />
+												<DataField>ExportStatus</DataField>
+												<DataSource>DEVIntegExportDocumentLog</DataSource>
+												<Items />
+											</AxFormControl>
+											<AxFormControl xmlns=""
+												i:type="AxFormDateTimeControl">
+												<Name>OverviewNoResponse_StatusChangeDate</Name>
+												<Type>DateTime</Type>
+												<FormControlExtension
+													i:nil="true" />
+												<DataField>StatusChangeDate</DataField>
+												<DataSource>DEVIntegExportDocumentLog</DataSource>
+											</AxFormControl>
+											<AxFormControl xmlns=""
+												i:type="AxFormStringControl">
+												<Name>OverviewNoResponse_ClassName</Name>
+												<Type>String</Type>
+												<FormControlExtension
+													i:nil="true" />
+												<DataField>ClassName</DataField>
+												<DataSource>DEVIntegExportDocumentLog</DataSource>
+											</AxFormControl>
+										</Controls>
+										<DataGroup>OverviewNoResponse</DataGroup>
+										<DataSource>DEVIntegExportDocumentLog</DataSource>
+									</AxFormControl>
+									<AxFormControl xmlns=""
+										i:type="AxFormInt64Control">
+										<Name>DEVIntegExportDocumentLog_RecId</Name>
+										<Type>Int64</Type>
+										<FormControlExtension
+											i:nil="true" />
+										<DataField>RecId</DataField>
+										<DataSource>DEVIntegExportDocumentLog</DataSource>
+									</AxFormControl>
+								</Controls>
+								<DataSource>DEVIntegExportDocumentLog</DataSource>
+								<Style>Tabular</Style>
+							</AxFormControl>
+						</Controls>
+						<Caption>Overview</Caption>
+						<DataSource>DEVIntegExportDocumentLog</DataSource>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormTabPageControl">
+						<Name>DetailsTabPage</Name>
+						<Pattern>FieldsFieldGroups</Pattern>
+						<PatternVersion>1.1</PatternVersion>
+						<Type>TabPage</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<Controls>
+							<AxFormControl xmlns=""
+								i:type="AxFormGroupControl">
+								<Name>DetailsGroup</Name>
+								<Type>Group</Type>
+								<FormControlExtension
+									i:nil="true" />
+								<Controls>
+									<AxFormControl xmlns=""
+										i:type="AxFormStringControl">
+										<Name>DetailsGroup_CompanyId</Name>
+										<Type>String</Type>
+										<FormControlExtension
+											i:nil="true" />
+										<DataField>CompanyId</DataField>
+										<DataSource>DEVIntegExportDocumentLog</DataSource>
+									</AxFormControl>
+									<AxFormControl xmlns=""
+										i:type="AxFormComboBoxControl">
+										<Name>DetailsGroup_ExportStatus</Name>
+										<Type>ComboBox</Type>
+										<FormControlExtension
+											i:nil="true" />
+										<DataField>ExportStatus</DataField>
+										<DataSource>DEVIntegExportDocumentLog</DataSource>
+										<Items />
+									</AxFormControl>
+									<AxFormControl xmlns=""
+										i:type="AxFormStringControl">
+										<Name>DetailsGroup_tableName</Name>
+										<Type>String</Type>
+										<FormControlExtension
+											i:nil="true" />
+										<CacheDataMethod>Yes</CacheDataMethod>
+										<DataMethod>tableName</DataMethod>
+										<DataSource>DEVIntegExportDocumentLog</DataSource>
+									</AxFormControl>
+									<AxFormControl xmlns=""
+										i:type="AxFormReferenceGroupControl">
+										<Name>DetailsGroup_RefRecId</Name>
+										<Type>ReferenceGroup</Type>
+										<FormControlExtension
+											i:nil="true" />
+										<Controls />
+										<DataSource>DEVIntegExportDocumentLog</DataSource>
+										<ReferenceField>RefRecId</ReferenceField>
+									</AxFormControl>
+									<AxFormControl xmlns=""
+										i:type="AxFormStringControl">
+										<Name>DetailsGroup_ClassName</Name>
+										<Type>String</Type>
+										<FormControlExtension
+											i:nil="true" />
+										<DataField>ClassName</DataField>
+										<DataSource>DEVIntegExportDocumentLog</DataSource>
+									</AxFormControl>
+									<AxFormControl xmlns=""
+										i:type="AxFormStringControl">
+										<Name>DetailsGroup_MessageTypeIdOutbound</Name>
+										<Type>String</Type>
+										<FormControlExtension
+											i:nil="true" />
+										<DataField>MessageTypeIdOutbound</DataField>
+										<DataSource>DEVIntegExportDocumentLog</DataSource>
+									</AxFormControl>
+								</Controls>
+								<DataGroup>DetailsGroup</DataGroup>
+								<DataSource>DEVIntegExportDocumentLog</DataSource>
+							</AxFormControl>
+						</Controls>
+						<ColumnsMode>Fill</ColumnsMode>
+						<Caption>Details</Caption>
+						<DataSource>DEVIntegExportDocumentLog</DataSource>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormTabPageControl">
+						<Name>FormTabPageControl2</Name>
+						<Pattern>ToolbarList</Pattern>
+						<PatternVersion>1.2</PatternVersion>
+						<Type>TabPage</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<Controls>
+							<AxFormControl xmlns=""
+								i:type="AxFormGridControl">
+								<Name>FormGridControl1</Name>
+								<Type>Grid</Type>
+								<FormControlExtension
+									i:nil="true" />
+								<Controls>
+									<AxFormControl xmlns=""
+										i:type="AxFormGroupControl">
+										<Name>Overview</Name>
+										<Type>Group</Type>
+										<FormControlExtension
+											i:nil="true" />
+										<Controls>
+											<AxFormControl xmlns=""
+												i:type="AxFormReferenceGroupControl">
+												<Name>Overview_ExportLogRefRecId</Name>
+												<Type>ReferenceGroup</Type>
+												<FormControlExtension
+													i:nil="true" />
+												<Controls />
+												<DataSource>DEVIntegMessageDataOutbound</DataSource>
+												<ReferenceField>ExportLogRefRecId</ReferenceField>
+											</AxFormControl>
+										</Controls>
+										<DataGroup>Overview</DataGroup>
+										<DataSource>DEVIntegMessageDataOutbound</DataSource>
+									</AxFormControl>
+								</Controls>
+								<DataSource>DEVIntegMessageDataOutbound</DataSource>
+							</AxFormControl>
+							<AxFormControl xmlns=""
+								i:type="AxFormGroupControl">
+								<Name>FooterGroup</Name>
+								<Pattern>FillText</Pattern>
+								<PatternVersion>UX7 1.0</PatternVersion>
+								<Type>Group</Type>
+								<WidthMode>SizeToAvailable</WidthMode>
+								<FormControlExtension
+									i:nil="true" />
+								<Controls>
+									<AxFormControl xmlns=""
+										i:type="AxFormStringControl">
+										<Name>DEVIntegMessageDataOutbound_FileDataStr</Name>
+										<HeightMode>SizeToAvailable</HeightMode>
+										<Type>String</Type>
+										<WidthMode>SizeToAvailable</WidthMode>
+										<FormControlExtension
+											i:nil="true" />
+										<DataField>FileDataStr</DataField>
+										<DataSource>DEVIntegMessageDataOutbound</DataSource>
+									</AxFormControl>
+								</Controls>
+							</AxFormControl>
+						</Controls>
+						<Caption>Log</Caption>
+						<DataSource>DEVIntegMessageDataOutbound</DataSource>
+					</AxFormControl>
+				</Controls>
+			</AxFormControl>
+		</Controls>
+	</Design>
+	<Parts />
+</AxForm>

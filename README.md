@@ -12,6 +12,8 @@ This repository contains 3 D365FO models:
     - [-Editable table browser](#-editable-table-browser)
     - [-List of Values to Range](#-list-of-values-to-range)
     - [-Execute direct SQL in D365FO database](#-execute-direct-sql-in-d365fo-database)
+    - [-SQL reports](#-sql-reports)
+    - [-D365FO Infolog call stack](#-d365fo-infolog-call-stack)
   - [DEVCommon model](#devcommon-model)
     - [-DEV class](#-dev-class)
     - [-DEVDimensionHelper class](#-devdimensionhelper-class)
@@ -23,8 +25,10 @@ This repository contains 3 D365FO models:
     - [-Parallel batch processing in X++](#-parallel-batch-processing-in-x)
   - [DEVTutorialReports submodel](#devtutorialreports-submodel)
     - [-Sales Invoice report](#-sales-invoice-report)
-  - [DEVTutorialIntegration submodel](#devtutorialintegration-submodel)
+  - [DEVExternalIntegration submodel](#devexternalintegration-submodel)
     - [-File-based integration in Dynamics 365 FinOps using X++](#-file-based-integration-in-dynamics-365-finops-using-x)
+    - [-Multicompany DMF integration in Dynamics 365 FinOps using X++](#-multicompany-dmf-integration-in-dynamics-365-finops-using-x)
+    - [-XppInteg - Azure Service Bus integration solution for Dynamics 365 FinOps](#-xppinteg---azure-service-bus-integration-solution-for-dynamics-365-finops)
   - [Installation](#installation)
   - [Contribution](#contribution)
 
@@ -40,7 +44,7 @@ Fields list form is an extended version of the standard Show all fields form wit
 
 Full description: [Fields list form](https://denistrunin.com/xpptools-fieldslist/). Sub-model name: DEVRecordInfo
 
-![](assets/fieldslistEx.png)
+![Fields list](assets/fieldslistEx.png)
 
 ### -Display system field name in the query filter
 
@@ -48,8 +52,8 @@ This utility adds system field name in the standard query filter lookup and in t
 
 Full description: [Filter by AOT name](https://denistrunin.com/xpptools-queryfieldsAOTname/). Sub-model name: DEVQueryFieldsAOTName
 
-![](assets/DEVQueryFieldsAOTName.png)
-![](assets/DEVQueryFieldsAOTNamePers.png)
+![DEV Query field name](assets/DEVQueryFieldsAOTName.png)
+![DEV Query field name personalization](assets/DEVQueryFieldsAOTNamePers.png)
 
 ### -Display table relation fields
 
@@ -59,7 +63,7 @@ Code is based on **sukhanchik** post on [axForum](https://translate.google.com/t
 
 Sub-model name: DEVSysQueryFormAddRelInfo
 
-![](assets/DEVSysQueryFormAddRelInfo.png)
+![DEV SysQuery relation](assets/DEVSysQueryFormAddRelInfo.png)
 
 ### -Editable table browser
 
@@ -69,7 +73,7 @@ Test link https://usnconeboxax1aos.cloud.onebox.dynamics.com/?cmp=USMF&mi=DEVSys
 
 Full description: [Editable table browser](https://denistrunin.com/xpptools-devtablebrowser/). Sub-model name: DEVSysTableBrowser
 
-### -List of Values to Range 
+### -List of Values to Range
 
 This functionality is intended to help users deal with list of values in query range. With help of this tool you can:
 
@@ -79,7 +83,7 @@ This functionality is intended to help users deal with list of values in query r
 Full description: [List of Values to Range](https://denistrunin.com/xpptools-listvaluestorange/)
 Sub-model name: DEVListOfValuesToRange
 
-![](assets/DEVListOfValuesToRange.png)
+![DEV list values to range](assets/DEVListOfValuesToRange.png)
 
 **[⬆ back to top](#XppTools)**
 
@@ -90,7 +94,22 @@ Sub-model name: DEVListOfValuesToRange
 Full description: [Execute direct SQL in D365FO database](https://denistrunin.com/xpptools-sqlexecute/)
 Sub-model name: DEVSQLExecute
 
-![](assets/DEVSQLExecute.png)
+![DEV SQL Execute](assets/DEVSQLExecute.png)
+
+### -SQL reports
+
+'SQL reports' functionality is a set of forms that allow to define and execute direct SQL reports in the D365FO database. There is a "SQL definition" table that defines the SQL text, a "SQL format" table that defines the output format(e.g. CSV, Excel, etc..) and SQL Report table where the user can run the report and output the result to the selected format.
+
+Sub-model name: DEVSQLReports
+
+### -D365FO Infolog call stack
+
+Extension for the standard D365FO system that allows saving stack trace data for infolog messages.
+
+Full description: [D365FO Infolog call stack](https://denistrunin.com/xpptools-devinfocallstack/)
+Sub-model name: DEVCallStackInfolog
+
+![DEV Call Stack](assets/DevCallStackInfoMain.jpg)
 
 **[⬆ back to top](#XppTools)**
 
@@ -150,25 +169,32 @@ Contains report development examples
 
 A sample code to Create a new design for Sales Invoice report in D365FO (https://denistrunin.com/xpptools-reportsalesinvoice/)
 
-## DEVTutorialIntegration submodel
+## DEVExternalIntegration submodel
 
-Contains integration [samples](https://github.com/TrudAX/XppTools/tree/master/DEVTutorial/DEVTutorialIntegration)
+Contains integration solution XppInteg. It consists from [core module](https://github.com/TrudAX/XppTools/tree/master/DEVTutorial/DEVExternalIntegration) and [samples](https://github.com/TrudAX/XppTools/tree/master/DEVTutorial/DEVExternalIntegrationSamples)
 
 ### -File-based integration in Dynamics 365 FinOps using X++
 
 A sample code for implementing file-based integration in Dynamics 365 FinOps using X++. Create Ledger journals based on periodic import of Excel/CSV files from Azure storage   (https://denistrunin.com/xpptools-fileintegledger/). Test files for Demo database [here](https://github.com/TrudAX/XppTools/blob/master/assets/TestPeriodicLedgerJournalImport.zip)
+
+### -Multicompany DMF integration in Dynamics 365 FinOps using X++
+
+A sample code to implement recurring file-based integration in D365FO using X++ and DMF (https://denistrunin.com/xpptools-fileintegdmf/).
+
+### -XppInteg - Azure Service Bus integration solution for Dynamics 365 FinOps
+
+A sample code to implement Azure Service Bus integration in D365FO using X++ (https://denistrunin.com/xpptools-integservbussalesjson/).
 
 **[⬆ back to top](#XppTools)**
 
 ## Installation
 
 1. Download the Source code from this GitHub repo into the Temp directory on the DEV VM.
-
 2. Copy **DEVTools**(or DEVGlobal, DEVTutorial) folder to your package folder (C:\AOSService\PackagesLocalDirectory )
-
 3. Start Visual Studio and Run compile for the **DEVTools** folder (Dynamics 365 –Build models.. – Select DEVTools)
+4. Run database sync - **Invoke-D365DbSyncModule -Module "DEVTools"**
 
-![](assets/CopyFolderToLocal.png)
+![Copy to local folder](assets/CopyFolderToLocal.png)
 
 If you want to contribute - change the objects using Visual Studio in the **DEVTools** model, copy the changed elements(xml files) back into the Temp folder and create GitHub pull request from this Temp folder.
 

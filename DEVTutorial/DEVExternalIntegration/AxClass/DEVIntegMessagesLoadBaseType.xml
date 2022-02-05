@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>DEVIntegMessagesLoadBaseType</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+class DEVIntegMessagesLoadBaseType
+{
+    DEVIntegMessageTypeInbound						messageTypeTable;
+
+    int  readMessageCount;
+    int  currentTimeStart;
+
+
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>parmMessageTypeTable</Name>
+				<Source><![CDATA[
+    public DEVIntegMessageTypeInbound parmMessageTypeTable(DEVIntegMessageTypeInbound _messageTypeTable = messageTypeTable)
+    {
+        messageTypeTable = _messageTypeTable;
+        return messageTypeTable;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>loadMessageType</Name>
+				<Source><![CDATA[
+    public int loadMessageType()
+    {
+        return 0;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>checkMessageReadLimit</Name>
+				<Source><![CDATA[
+    public boolean checkMessageReadLimit()
+    {
+        int      currentTime, readSecondsTotal;
+        boolean  res;
+        ;
+        if (messageTypeTable.ReadLimitMessages)
+        {
+            readMessageCount++;
+            if (readMessageCount >= messageTypeTable.ReadLimitMessages)
+            {
+                res = true;
+            }
+        }
+        if (messageTypeTable.ReadLimitSeconds)
+        {
+            if (! currentTimeStart)
+            {
+                currentTimeStart = DEV::timeNow();
+            }
+            currentTime = DEV::timeNow();
+            if (currentTime < currentTimeStart)
+            {
+                currentTimeStart = DEV::timeNow();
+            }
+            else
+            {
+                readSecondsTotal = currentTime - currentTimeStart;
+            }
+            if (readSecondsTotal >= messageTypeTable.ReadLimitSeconds)
+            {
+                res = true;
+            }
+        }
+        return res;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>testConnection</Name>
+				<Source><![CDATA[
+    void testConnection()
+    {
+        throw error(Error::missingOverload(funcName()));
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>testOutboundConnection</Name>
+				<Source><![CDATA[
+    void testOutboundConnection(DEVIntegMessageTypeTableOutbound  _messageTypeTableOutbound)
+    {
+        throw error(Error::missingOverload(funcName()));
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>constructFromMessageType</Name>
+				<Source><![CDATA[
+    static  DEVIntegMessagesLoadBaseType constructFromMessageType(DEVIntegMessageTypeInbound   _messageTypeTable)
+    {
+        DEVIntegMessagesLoadBaseType  shareClass;
+        ;
+        shareClass = DEVIntegMessagesLoadBaseType::constructFromConnectionType(_messageTypeTable.connectionType());
+
+        shareClass.parmMessageTypeTable(_messageTypeTable);
+        return shareClass;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>constructFromConnectionType</Name>
+				<Source><![CDATA[
+    static  DEVIntegMessagesLoadBaseType constructFromConnectionType(DEVIntegConnectionType _connectionType)
+    {
+        DEVIntegMessagesLoadBaseType  shareClass;
+
+        switch(_connectionType.ConnectionTypeResource)
+        {
+            case DEVIntegConnectionTypeResource::AzureFileShare:
+                shareClass = new DEVIntegMessagesLoadAzureFileShare();
+                break;
+            case DEVIntegConnectionTypeResource::AzureServiceBus:
+                shareClass = new DEVIntegMessagesLoadAzureServiceBus();
+                break;
+        }
+        return shareClass;
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

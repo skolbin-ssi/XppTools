@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>DEVIntegTutorialSOHeaderContract</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+/// <summary>
+/// DEVIntegTutorialSOHeaderContract class.
+/// </summary>
+[DataContractAttribute('DEVIntegTutorialSOHeaderContract')]
+class DEVIntegTutorialSOHeaderContract
+{
+    private str             companyId;
+    private str             customerId;
+    private str             externalOrderNumber;
+    private real            shippingAmount;
+    private List            lines;
+
+
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>parmCompanyId</Name>
+				<Source><![CDATA[
+    [DataMemberAttribute('companyId')]
+    public str parmCompanyId(str _companyId = companyId)
+    {
+        companyId = _companyId;
+    
+        return companyId;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>parmCustomerId</Name>
+				<Source><![CDATA[
+    [DataMemberAttribute('customerId')]
+    public str parmCustomerId(str _customerId = customerId)
+    {
+        customerId = _customerId;
+    
+        return customerId;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>parmExternalOrderNumber</Name>
+				<Source><![CDATA[
+    [DataMemberAttribute('externalOrderNumber')]
+    public str parmExternalOrderNumber(str _externalOrderNumber = externalOrderNumber)
+    {
+        externalOrderNumber = _externalOrderNumber;
+    
+        return externalOrderNumber;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>parmShippingAmount</Name>
+				<Source><![CDATA[
+    [DataMemberAttribute('shippingAmount')]
+    public real parmShippingAmount(real _shippingAmount = shippingAmount)
+    {
+        shippingAmount = _shippingAmount;
+    
+        return shippingAmount;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>parmLines</Name>
+				<Source><![CDATA[
+    [DataMemberAttribute('lines'),
+        DataCollectionAttribute(Types::Class, classStr(DEVIntegTutorialSOHeaderLinesContract))]
+    public List parmLines(List _lines = lines)
+    {
+        lines = _lines;
+    
+        return lines;
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

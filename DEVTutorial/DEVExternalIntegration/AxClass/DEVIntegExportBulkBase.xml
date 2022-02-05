@@ -1,0 +1,432 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>DEVIntegExportBulkBase</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+public class DEVIntegExportBulkBase extends RunBaseBatch implements BatchRetryable
+{
+    DEVIntegMessageTypeIdOutbound  messageTypeIdOutbound;
+    NoYesId                        isTestRun;
+    
+    DialogField                    dlgMessageTypeIdOutbound;
+    DialogField                    dlgIsTestRun;
+
+    DEVIntegAzureStorageConnectionHelper   azureStorageConnectionHelper;
+    DEVIntegMessageTypeTableOutbound       messageTypeTableOutbound;
+
+
+    TextStreamIo                ioDataStream;
+    int                         numberOfLines;
+    DEVIntegExportBulkStatus    exportBulkStatus;
+    boolean                     isExportStatusOverrided;
+    NotesLine                   documentDescription;
+    
+    
+    #define.CurrentVersion(1)
+    #localmacro.CurrentList
+        messageTypeIdOutbound,
+        isTestRun
+    #endmacro
+    
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>dialog</Name>
+				<Source><![CDATA[
+    public Object dialog()
+    {
+        DialogRunbase       dialog = super();
+        ;
+        dlgMessageTypeIdOutbound  = dialog.addFieldValue(extendedtypestr(DEVIntegMessageTypeIdOutbound), messageTypeIdOutbound);
+        dlgIsTestRun              = dialog.addFieldValue(extendedtypestr(NoYesId), isTestRun, "Test run", "The message will be just displayed to the user");
+        
+        return dialog;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>getFromDialog</Name>
+				<Source><![CDATA[
+    public boolean getFromDialog()
+    {
+        ;
+        messageTypeIdOutbound   = dlgMessageTypeIdOutbound.value();
+        isTestRun               = dlgIsTestRun.value();
+        
+        return super();
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>parmMessageTypeIdOutbound</Name>
+				<Source><![CDATA[
+    public DEVIntegMessageTypeIdOutbound parmMessageTypeIdOutbound(DEVIntegMessageTypeIdOutbound _messageTypeIdOutbound = messageTypeIdOutbound)
+    {
+        messageTypeIdOutbound = _messageTypeIdOutbound;
+        return messageTypeIdOutbound;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>parmIsTestRun</Name>
+				<Source><![CDATA[
+    public NoYesId parmIsTestRun(NoYesId _isTestRun = isTestRun)
+    {
+        isTestRun = _isTestRun;
+        return isTestRun;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>pack</Name>
+				<Source><![CDATA[
+    public container pack()
+    {
+        return [#CurrentVersion, #CurrentList];
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>unpack</Name>
+				<Source><![CDATA[
+    public boolean unpack(container _packedClass)
+    {
+        Version    version = RunBase::getVersion(_packedClass);
+        switch (version)
+        {
+            case #CurrentVersion:
+                [version,#CurrentList] = _packedClass;
+                break;
+            default:
+                return false;
+        }
+        return true;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>setExportStatus</Name>
+				<Source><![CDATA[
+    public void setExportStatus(DEVIntegExportBulkStatus  _exportBulkStatus)
+    {
+        isExportStatusOverrided = true;
+        exportBulkStatus        = _exportBulkStatus;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>run</Name>
+				<Source><![CDATA[
+    public void run()
+    {
+
+        DEVIntegExportBulkLog  exportBulkLog, exportBulkLogUpd;
+        int                    infoCnt;
+        Exception              exception = Exception::Info;
+
+        try
+        {
+            exportBulkStatus        = DEVIntegExportBulkStatus::InProgress;
+            isExportStatusOverrided = false;
+            numberOfLines           = 0;
+            documentDescription     = "";
+
+            exportBulkLog.clear();
+            exportBulkLog.CompanyId = curExt();
+            exportBulkLog.MessageTypeIdOutbound   = messageTypeIdOutbound;
+            exportBulkLog.ExportStatus            = DEVIntegExportBulkStatus::InProgress;
+            exportBulkLog.StartDateTime           = DateTimeUtil::utcNow();
+            exportBulkLog.insert();
+
+            infoCnt = infologLine();
+
+            this.exportData();
+
+            this.finalizeExport();
+
+            if (! isExportStatusOverrided)
+            {
+                exportBulkStatus        = DEVIntegExportBulkStatus::Done;
+            }
+            else
+            {
+                exception       = Exception::Warning;
+            }
+
+        }
+        catch
+        {
+            exportBulkStatus        = DEVIntegExportBulkStatus::Error;
+            exception               = Exception::Error;
+        }
+
+        ttsbegin;
+        exportBulkLogUpd = DEVIntegExportBulkLog::findRecId(exportBulkLog.RecId, true);
+        if (exportBulkLogUpd.RecId)
+        {
+            exportBulkLogUpd.ExportStatus          = exportBulkStatus;
+            exportBulkLogUpd.EndDateTime = DateTimeUtil::utcNow();
+            exportBulkLogUpd.Duration              = any2Int(DateTimeUtil::getDifference(exportBulkLogUpd.EndDateTime, exportBulkLogUpd.StartDateTime));
+            
+            exportBulkLogUpd.RecordsProcessed      = numberOfLines;
+            exportBulkLogUpd.DocumentDescription   = documentDescription;
+            exportBulkLogUpd.update();
+
+            DEVIntegErrorLog::insertErrorByMessage(exportBulkLogUpd, infoCnt, exception);
+        }
+        ttscommit;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>finalizeExport</Name>
+				<Source><![CDATA[
+    public void finalizeExport()
+    {
+        azureStorageConnectionHelper = null;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>exportData</Name>
+				<Source><![CDATA[
+    public void exportData()
+    {
+        throw error(Error::missingOverload(funcName()));
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>getDescription</Name>
+				<Source><![CDATA[
+    public str getDescription()
+    {
+        return classId2Name(classIdGet(this));
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>initDefaultParameters</Name>
+				<Source><![CDATA[
+    public DEVIntegMessageTypeTableOutbound initDefaultParameters(DEVIntegMessageTypeTableOutbound    _messageTypeTableOutbound)
+    {
+        _messageTypeTableOutbound.FileNameParameterD   = 'yyyyMMdd_HHmmss';
+        _messageTypeTableOutbound.FileName             = 'Export_%d.csv';
+        _messageTypeTableOutbound.FileColumnDelimiter  = ',';
+
+        return _messageTypeTableOutbound;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>getMessageTypeTableOutboundOrDefault</Name>
+				<Source><![CDATA[
+    public DEVIntegMessageTypeTableOutbound getMessageTypeTableOutboundOrDefault()
+    {
+        DEVIntegMessageTypeTableOutbound  res;
+
+        res = DEVIntegMessageTypeTableOutbound::find(messageTypeIdOutbound);
+        if (! res.RecId)
+        {
+            this.initDefaultParameters(res);
+        }
+
+        return res;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>canRunInNewSession</Name>
+				<Source><![CDATA[
+    public boolean canRunInNewSession()
+    {
+        return false;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>canGoBatch</Name>
+				<Source><![CDATA[
+    public boolean canGoBatch()
+    {
+        return true;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>isRetryable</Name>
+				<Source><![CDATA[
+    public boolean isRetryable()
+    {
+        return true;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>construct</Name>
+				<Source><![CDATA[
+    public static DEVIntegExportBulkBase construct()
+    {
+        return new DEVIntegExportBulkBase();
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>description</Name>
+				<Source><![CDATA[
+    static ClassDescription description()
+    {
+        return "Base class for full table export";
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>writeFileAzureStorage</Name>
+				<Source><![CDATA[
+    public void  writeFileAzureStorage(FileName  _fileName, System.IO.MemoryStream  _fileDataStream)
+    {
+        if (! azureStorageConnectionHelper)
+        {
+            azureStorageConnectionHelper = this.getAzureStorageConnectionHelper();
+            azureStorageConnectionHelper.connect();
+        }
+        azureStorageConnectionHelper.createFileInDirectory(_fileName, messageTypeTableOutbound.OutputFolder, _fileDataStream);
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>getAzureStorageConnectionHelper</Name>
+				<Source><![CDATA[
+    public DEVIntegAzureStorageConnectionHelper getAzureStorageConnectionHelper()
+    {
+        DEVIntegAzureStorageConnectionHelper res;
+
+        messageTypeTableOutbound = DEVIntegMessageTypeTableOutbound::find(messageTypeIdOutbound);
+        if (! messageTypeTableOutbound.IsEnabled)
+        {
+            throw error(strFmt("Can't find an Enabled message type for %1 type", messageTypeIdOutbound));
+        }
+        if (messageTypeTableOutbound.connectionType().ConnectionTypeResource != DEVIntegConnectionTypeResource::AzureFileShare)
+        {
+            throw error(strFmt("Message type %1 should have %2 connection(but %3 used)",
+                    messageTypeTableOutbound.MessageTypeIdOutbound, DEVIntegConnectionTypeResource::AzureFileShare, messageTypeTableOutbound.connectionType().ConnectionTypeResource));
+        }
+        res = DEVIntegAzureStorageConnectionHelper::constructOutbound(messageTypeTableOutbound);
+
+        return res;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>writeHeaderLine</Name>
+				<Source><![CDATA[
+    public void writeHeaderLine(container  _dataLine)
+    {
+        ioDataStream.writeExp(_dataLine);
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>writeDataLine</Name>
+				<Source><![CDATA[
+    public void writeDataLine(container  _dataLine)
+    {
+        ioDataStream.writeExp(_dataLine);
+        numberOfLines++;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>sendFileToStorage</Name>
+				<Source><![CDATA[
+    public void sendFileToStorage()
+    {
+        System.IO.MemoryStream memoryStream;
+        memoryStream = ioDataStream.getStream();
+
+        Filename fileName;
+        fileName =  messageTypeTableOutbound.getFileName();
+        
+        if (isTestRun)
+        {
+            File::SendFileToUser(memoryStream, fileName);
+        }
+        else
+        {
+            this.writeFileAzureStorage(fileName, memoryStream);
+
+            info(strFmt("File %1 created in %2 folder", fileName, messageTypeTableOutbound.OutputFolder));
+        }
+        documentDescription = fileName;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>initCSVStream</Name>
+				<Source><![CDATA[
+    public void initCSVStream()
+    {
+        #File
+
+        messageTypeTableOutbound = this.getMessageTypeTableOutboundOrDefault();
+
+        ioDataStream = TextStreamIo::constructForWrite(0);
+        ioDataStream.inFieldDelimiter(messageTypeTableOutbound.getFileColumnDelimiter());
+        ioDataStream.outFieldDelimiter(messageTypeTableOutbound.getFileColumnDelimiter());
+        ioDataStream.inRecordDelimiter(#delimiterCRLF);
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>main</Name>
+				<Source><![CDATA[
+    public static void main(Args _args)
+    {
+        DEVIntegExportBulkBase              runObject;
+        DEVIntegMessageTypeTableOutbound    messageTypeTableOutbound;
+        ;
+        if (_args.dataset() != tablenum(DEVIntegMessageTypeTableOutbound))
+        {
+            throw error(Error::missingRecord(funcname()));
+        }
+        messageTypeTableOutbound = _args.record();
+        runObject = messageTypeTableOutbound.getBulkExportClass();
+
+        runObject.parmMessageTypeIdOutbound(messageTypeTableOutbound.MessageTypeIdOutbound);
+
+        if (runObject.prompt())
+        {
+            runObject.runOperation();
+        }
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

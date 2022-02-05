@@ -1,0 +1,546 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxTable xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>DEVIntegMessageTypeTableOutbound</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+public class DEVIntegMessageTypeTableOutbound extends common
+{
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>find</Name>
+				<Source><![CDATA[
+    public static DEVIntegMessageTypeTableOutbound find(DEVIntegMessageTypeIdOutbound _messageTypeIdOutbound,
+                                                        boolean                       _forUpdate = false)
+    {
+        DEVIntegMessageTypeTableOutbound dEVIntegMessageTypeTableOutbound;
+    
+        if (_messageTypeIdOutbound)
+        {
+            dEVIntegMessageTypeTableOutbound.selectForUpdate(_forUpdate);
+    
+            select firstonly dEVIntegMessageTypeTableOutbound
+                where dEVIntegMessageTypeTableOutbound.MessageTypeIdOutbound == _messageTypeIdOutbound;
+        }
+    
+        return dEVIntegMessageTypeTableOutbound;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>findEnabled</Name>
+				<Source><![CDATA[
+    public static DEVIntegMessageTypeTableOutbound findEnabled(Name                 _className,
+                                                               boolean              _forUpdate = false)
+    {
+        DEVIntegMessageTypeTableOutbound integMessageTypeTableOutbound;
+    
+        integMessageTypeTableOutbound.selectForUpdate(_forUpdate);
+    
+        select firstonly integMessageTypeTableOutbound
+            order by MessageTypeIdOutbound
+            where integMessageTypeTableOutbound.ClassName  == _className &&
+                  integMessageTypeTableOutbound.IsEnabled  == true;
+    
+        return integMessageTypeTableOutbound;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>connectionType</Name>
+				<Source><![CDATA[
+    DEVIntegConnectionType connectionType()
+    {
+        DEVIntegConnectionType  connectionType;
+        select connectionType
+            where connectionType.ConnectionTypeId == this.ConnectionTypeId;
+
+        return connectionType;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>getActionClass</Name>
+				<Source><![CDATA[
+    DEVIntegExportMessageBase getActionClass()
+    {
+        if (!this.IsFullExport && this.ClassName)
+        {
+            SysDictClass dc = new SysDictClass(className2Id(this.ClassName));
+            if (dc)
+            {
+                return dc.makeObject();
+            }
+        }
+        return null;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>getBulkExportClass</Name>
+				<Source><![CDATA[
+    DEVIntegExportBulkBase getBulkExportClass()
+    {
+        if (this.IsFullExport && this.ClassName)
+        {
+            SysDictClass dc = new SysDictClass(className2Id(this.ClassName));
+            if (dc)
+            {
+                return dc.makeObject();
+            }
+        }
+        return null;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>validateWrite</Name>
+				<Source><![CDATA[
+    public boolean validateWrite()
+    {
+        boolean                             ret;
+        DEVIntegMessageTypeTableOutbound    messageTypeTableOutbound;
+   
+        ret = super();
+
+        if (! this.IsFullExport && this.ClassName && this.IsEnabled)
+        {
+            select firstonly messageTypeTableOutbound
+                where messageTypeTableOutbound.ClassName == this.ClassName &&
+                      messageTypeTableOutbound.RecId     != this.RecId;
+            if (messageTypeTableOutbound.RecId)
+            {
+                ret = checkFailed(strFmt("Message %1 with the same class %2 already exists", 
+                    messageTypeTableOutbound.MessageTypeIdOutbound, messageTypeTableOutbound.ClassName));
+            }
+        }
+    
+        return ret;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>getFileName</Name>
+				<Source><![CDATA[
+    public Filename getFileName()
+    {
+        Filename        res;
+
+        #define.DefaultFileNameForEmptyValue('D365FOExport.csv')
+
+        if (this.FileName)
+        {
+            res = this.FileName;
+            //if contains %d
+            if (strScan(this.FileName, '%d', 1, strLen(this.FileName)))
+            {
+                str sAX;
+                if (this.FileNameParameterD)
+                {
+                    System.DateTime dateNow = System.DateTime::Now;
+
+                    System.String sDate;
+                    sDate = dateNow.ToString(this.FileNameParameterD, System.Globalization.DateTimeFormatInfo::InvariantInfo);
+
+                    sAX = sDate;
+                }
+                res = strReplace(res, '%d', sAX);
+            }
+        }
+        else
+        {
+            res = #DefaultFileNameForEmptyValue;
+        }
+
+        return res;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>getFileColumnDelimiter</Name>
+				<Source><![CDATA[
+    public Delimiter getFileColumnDelimiter()
+    {
+        Delimiter  res = this.FileColumnDelimiter;
+        ;
+        if (this.FileColumnDelimiter)
+        {
+            if (this.FileColumnDelimiter == 'tab')
+            {
+                res = '\t';
+            }
+        }
+        else
+        {
+            res = ',';
+        }
+        return res;
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+	<FormRef>DEVIntegMessageTypeTableOutbound</FormRef>
+	<Label>Outbound message types</Label>
+	<SubscriberAccessLevel>
+		<Read>Allow</Read>
+	</SubscriberAccessLevel>
+	<TableGroup>Group</TableGroup>
+	<TitleField1>MessageTypeIdOutbound</TitleField1>
+	<TitleField2>FileNameParameterD</TitleField2>
+	<CacheLookup>Found</CacheLookup>
+	<ClusteredIndex>MessageTypeIdOutboundIdx</ClusteredIndex>
+	<CreatedBy>Yes</CreatedBy>
+	<CreatedDateTime>Yes</CreatedDateTime>
+	<ModifiedBy>Yes</ModifiedBy>
+	<ModifiedDateTime>Yes</ModifiedDateTime>
+	<PrimaryIndex>MessageTypeIdOutboundIdx</PrimaryIndex>
+	<SaveDataPerCompany>No</SaveDataPerCompany>
+	<DeleteActions />
+	<FieldGroups>
+		<AxTableFieldGroup>
+			<Name>AutoReport</Name>
+			<Fields>
+				<AxTableFieldGroupField>
+					<DataField>MessageTypeIdOutbound</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>FileNameParameterD</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>ConnectionTypeId</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>OutputFolder</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>IsEnabled</DataField>
+				</AxTableFieldGroupField>
+			</Fields>
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>AutoLookup</Name>
+			<Fields>
+				<AxTableFieldGroupField>
+					<DataField>MessageTypeIdOutbound</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>FileNameParameterD</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>ConnectionTypeId</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>OutputFolder</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>IsEnabled</DataField>
+				</AxTableFieldGroupField>
+			</Fields>
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>AutoIdentification</Name>
+			<AutoPopulate>Yes</AutoPopulate>
+			<Fields />
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>AutoSummary</Name>
+			<Fields />
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>AutoBrowse</Name>
+			<Fields />
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>DetailGroup</Name>
+			<Label>Details</Label>
+			<Fields>
+				<AxTableFieldGroupField>
+					<DataField>MessageTypeIdOutbound</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>IsEnabled</DataField>
+				</AxTableFieldGroupField>
+			</Fields>
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>EntiryGroup</Name>
+			<Label>Processing</Label>
+			<Fields>
+				<AxTableFieldGroupField>
+					<DataField>IsFullExport</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>ClassName</DataField>
+				</AxTableFieldGroupField>
+			</Fields>
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>GridGroup</Name>
+			<Label>Grid</Label>
+			<Fields>
+				<AxTableFieldGroupField>
+					<DataField>MessageTypeIdOutbound</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>IsEnabled</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>FileNameParameterD</DataField>
+				</AxTableFieldGroupField>
+			</Fields>
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>Overview</Name>
+			<Label>Overview</Label>
+			<Fields>
+				<AxTableFieldGroupField>
+					<DataField>MessageTypeIdOutbound</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>FileNameParameterD</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>ConnectionTypeId</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>IsEnabled</DataField>
+				</AxTableFieldGroupField>
+			</Fields>
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>SourceGroupFileShare</Name>
+			<Label>Export destination</Label>
+			<Fields>
+				<AxTableFieldGroupField>
+					<DataField>ConnectionTypeId</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>AzureShareReference</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>OutputFolder</DataField>
+				</AxTableFieldGroupField>
+			</Fields>
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>ListGroup</Name>
+			<Label>List</Label>
+			<Fields>
+				<AxTableFieldGroupField>
+					<DataField>MessageTypeIdOutbound</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>Description</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>IsEnabled</DataField>
+				</AxTableFieldGroupField>
+			</Fields>
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>SourceGroupServiceBus</Name>
+			<Label>Service Bus</Label>
+			<Fields>
+				<AxTableFieldGroupField>
+					<DataField>ConnectionTypeId</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>ServiceBusQueueName</DataField>
+				</AxTableFieldGroupField>
+			</Fields>
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>Advanced</Name>
+			<Label>Advanced</Label>
+			<Fields>
+				<AxTableFieldGroupField>
+					<DataField>OutboundLogType</DataField>
+				</AxTableFieldGroupField>
+			</Fields>
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>FileParameters</Name>
+			<Label>File parameters</Label>
+			<Fields>
+				<AxTableFieldGroupField>
+					<DataField>FileName</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>FileNameParameterD</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>FileColumnDelimiter</DataField>
+				</AxTableFieldGroupField>
+			</Fields>
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>SQLParameters</Name>
+			<Label>SQL Export</Label>
+			<Fields>
+				<AxTableFieldGroupField>
+					<DataField>SQLText</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>SQLMaxRows</DataField>
+				</AxTableFieldGroupField>
+			</Fields>
+		</AxTableFieldGroup>
+	</FieldGroups>
+	<Fields>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldString">
+			<Name>ConnectionTypeId</Name>
+			<ExtendedDataType>DEVIntegConnectionTypeId</ExtendedDataType>
+			<Mandatory>Yes</Mandatory>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldString">
+			<Name>Description</Name>
+			<ExtendedDataType>Description</ExtendedDataType>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldEnum">
+			<Name>IsEnabled</Name>
+			<ExtendedDataType>NoYesId</ExtendedDataType>
+			<HelpText>Integration is Enabled</HelpText>
+			<Label>Enabled</Label>
+			<EnumType>NoYes</EnumType>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldString">
+			<Name>MessageTypeIdOutbound</Name>
+			<AllowEdit>No</AllowEdit>
+			<ExtendedDataType>DEVIntegMessageTypeIdOutbound</ExtendedDataType>
+			<Mandatory>Yes</Mandatory>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldString">
+			<Name>OutputFolder</Name>
+			<ExtendedDataType>FilePath</ExtendedDataType>
+			<HelpText>Output location folder(e.g. ParentDir\ChildDir)</HelpText>
+			<Label>Output folder</Label>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldString">
+			<Name>ClassName</Name>
+			<ExtendedDataType>DEVIntegExportClassName</ExtendedDataType>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldString">
+			<Name>ServiceBusQueueName</Name>
+			<ExtendedDataType>BusinessEventsServiceBusQueueEndpointQueueName</ExtendedDataType>
+			<Label>Queue name</Label>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldEnum">
+			<Name>OutboundLogType</Name>
+			<EnumType>DEVIntegOutboundLogType</EnumType>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldString">
+			<Name>AzureShareReference</Name>
+			<ExtendedDataType>FolderName</ExtendedDataType>
+			<HelpText>Share reference for Azure storage</HelpText>
+			<Label>Share reference</Label>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldEnum">
+			<Name>IsFullExport</Name>
+			<ExtendedDataType>NoYesId</ExtendedDataType>
+			<HelpText>Export log is not used for the export</HelpText>
+			<Label>Full export</Label>
+			<EnumType>NoYes</EnumType>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldString">
+			<Name>FileColumnDelimiter</Name>
+			<ExtendedDataType>Delimiter</ExtendedDataType>
+			<HelpText>For Tabulation enter Tab value</HelpText>
+			<Label>Delimiter</Label>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldString">
+			<Name>FileName</Name>
+			<ExtendedDataType>Filename</ExtendedDataType>
+			<HelpText>File name template</HelpText>
+			<Label>File name</Label>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldString">
+			<Name>FileNameParameterD</Name>
+			<ExtendedDataType>Description</ExtendedDataType>
+			<HelpText>Parameter to format dates for file name. A standard C# syntax for date to str is used</HelpText>
+			<Label>Date format(%d)</Label>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldString">
+			<Name>SQLText</Name>
+			<ExtendedDataType>Notes</ExtendedDataType>
+			<HelpText>Report SQL Text</HelpText>
+			<Label>SQL Text</Label>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldInt">
+			<Name>SQLMaxRows</Name>
+			<ExtendedDataType>PositiveNumber</ExtendedDataType>
+			<HelpText>Maximum allowed rows</HelpText>
+			<Label>Max rows</Label>
+		</AxTableField>
+	</Fields>
+	<FullTextIndexes />
+	<Indexes>
+		<AxTableIndex>
+			<Name>MessageTypeIdOutboundIdx</Name>
+			<AlternateKey>Yes</AlternateKey>
+			<Fields>
+				<AxTableIndexField>
+					<DataField>MessageTypeIdOutbound</DataField>
+				</AxTableIndexField>
+			</Fields>
+		</AxTableIndex>
+		<AxTableIndex>
+			<Name>MessageTypeIdx</Name>
+			<AllowDuplicates>Yes</AllowDuplicates>
+			<Fields>
+				<AxTableIndexField>
+					<DataField>ClassName</DataField>
+				</AxTableIndexField>
+				<AxTableIndexField>
+					<DataField>IsEnabled</DataField>
+				</AxTableIndexField>
+			</Fields>
+		</AxTableIndex>
+	</Indexes>
+	<Mappings />
+	<Relations>
+		<AxTableRelation xmlns=""
+			i:type="AxTableRelationForeignKey">
+			<Name>DEVIntegConnectionType</Name>
+			<Cardinality>ZeroMore</Cardinality>
+			<OnDelete>Restricted</OnDelete>
+			<RelatedTable>DEVIntegConnectionType</RelatedTable>
+			<RelatedTableCardinality>ExactlyOne</RelatedTableCardinality>
+			<RelationshipType>Association</RelationshipType>
+			<Constraints>
+				<AxTableRelationConstraint xmlns=""
+					i:type="AxTableRelationConstraintField">
+					<Name>ConnectionTypeId</Name>
+					<Field>ConnectionTypeId</Field>
+					<RelatedField>ConnectionTypeId</RelatedField>
+				</AxTableRelationConstraint>
+			</Constraints>
+			<Index>ConnectionTypeIdIdx</Index>
+		</AxTableRelation>
+	</Relations>
+	<StateMachines />
+</AxTable>
