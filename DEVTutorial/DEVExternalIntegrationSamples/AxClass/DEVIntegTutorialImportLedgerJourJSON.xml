@@ -1,0 +1,362 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>DEVIntegTutorialImportLedgerJourJSON</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+/*
+{
+    "CompanyId": "USMF",
+    "PolicyNumber": "MyPol1",
+    "ClaimId": "MyClaim1"
+    "lines": [
+        {
+            "MainAccount": "602220",
+            "BusinessUnit": "1",
+            "Department": "22",
+            "CostCenter": "14",
+            "Amount: -1
+        },
+        {
+            "MainAccount": "604300",
+            "BusinessUnit": "1",
+            "Department": "22",
+            "CostCenter": "14",
+            "Amount: -2
+        },
+        {
+            "MainAccount": "500140",
+            "BusinessUnit": "1",
+            "Department": "22",
+            "CostCenter": "21",
+            "Amount: 3
+        }
+    ]
+}
+*/
+
+class DEVIntegTutorialImportLedgerJourJSON extends DEVIntegProcessMessageBase
+{
+
+    DEVIntegTutorialLedgerJourHeaderStaging      tutorialLedgerJourHeaderStaging;
+    DEVIntegTutorialLedgerJourLinesStaging       tutorialLedgerJourLinesStaging;
+
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>processMessage</Name>
+				<Source><![CDATA[
+    void  processMessage(DEVIntegMessageTable  _messageTable, DEVIntegMessageProcessResult _messageProcessResult)
+    {
+        tutorialLedgerJourHeaderStaging = null;
+        tutorialLedgerJourLinesStaging  = null;
+
+        messageTable         =  _messageTable;
+        messageProcessResult =  _messageProcessResult;
+   
+        if (! messageTable.IsParsed) //reading to staging tables
+        {
+            ttsbegin;
+            delete_from tutorialLedgerJourHeaderStaging
+                where tutorialLedgerJourHeaderStaging.MessageId == _messageTable.RecId;
+            delete_from tutorialLedgerJourLinesStaging
+                where tutorialLedgerJourLinesStaging.MessageId == _messageTable.RecId;
+            ttscommit;
+            this.readFileToStaging();
+        }
+        this.createDataFromStaging();
+
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>createDataFromStaging</Name>
+				<Source><![CDATA[
+    void createDataFromStaging()
+    {
+        LedgerJournalCheckPost  ledgerJournalCheckPost;
+        LedgerJournalTable      ledgerJournalTable;
+
+        tutorialLedgerJourHeaderStaging =  DEVIntegTutorialLedgerJourHeaderStaging::findByMessageRecId(messageTable.RecId);
+        if (! tutorialLedgerJourHeaderStaging.RecId)
+        {
+            throw error(strFmt("File %1. Can't find staging data", messageTable.Name));
+        }
+        if (! CompanyInfo::findDataArea(tutorialLedgerJourHeaderStaging.CompanyId))
+        {
+            throw error(strFmt("File %1. Company %2 doesn't exist", messageTable.Name, tutorialLedgerJourHeaderStaging.CompanyId));
+        }
+        changecompany(tutorialLedgerJourHeaderStaging.CompanyId)
+        {
+            messageProcessResult.parmProcessPrefix("Data validation");
+            this.validateDataFromStaging();
+
+            ttsbegin;
+            messageProcessResult.parmProcessPrefix("Journal creation");
+            ledgerJournalTable = this.createLedgerJournal();
+
+            this.updateDocumentDescription(ledgerJournalTable.JournalNum);
+          
+            if (messageTypeTable.IsAutoPostJournal)
+            {
+                messageProcessResult.parmProcessPrefix("Journal posting");
+                ledgerJournalCheckPost = ledgerJournalCheckPost::newLedgerJournalTable(ledgerJournalTable,  NoYes::Yes);
+                ledgerJournalCheckPost.runOperation();
+            }
+            ttscommit;
+        }
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>createLedgerJournal</Name>
+				<Source><![CDATA[
+    LedgerJournalTable createLedgerJournal()
+    {
+        LedgerJournalTable      ledgerJournalTable;
+        LedgerJournalTrans      ledgerJournalTrans;
+        LedgerJournalEngine     ledgerJournalEngine;
+
+        int                     numLines;
+        
+        ttsbegin;
+
+        while select tutorialLedgerJourLinesStaging
+            order by LineNumber
+            where tutorialLedgerJourLinesStaging.HeaderRefRecId ==  tutorialLedgerJourHeaderStaging.RecId
+        {
+            numLines++;
+            if (!ledgerJournalTable.RecId)
+            {
+                ledgerJournalTable.clear();
+                ledgerJournalTable.initValue();
+                ledgerJournalTable.JournalName = messageTypeTable.LedgerJournalNameId;
+                ledgerJournalTable.initFromLedgerJournalName();
+                ledgerJournalTable.JournalNum = JournalTableData::newTable(ledgerJournalTable).nextJournalId();
+                ledgerJournalTable.Name = strFmt("File %1, Date %2", messageTable.Name, DEV::systemdateget());
+                DEV::validateWriteRecordCheck(ledgerJournalTable);
+                ledgerJournalTable.insert();
+
+                info(strFmt("Journal %1 created", ledgerJournalTable.JournalNum));
+
+                ledgerJournalEngine = LedgerJournalEngine::construct(ledgerJournalTable.JournalType);
+                ledgerJournalEngine.newJournalActive(ledgerJournalTable);
+            }
+
+            ledgerJournalTrans.clear();
+            ledgerJournalTrans.initValue();
+            ledgerJournalEngine.initValue(ledgerJournalTrans);
+            ledgerJournalTrans.JournalNum           =   ledgerJournalTable.JournalNum;
+            ledgerJournalTrans.TransDate            =   DEV::systemdateget();
+            ledgerJournalTrans.AccountType          =   LedgerJournalACType::Ledger;
+            ledgerJournalTrans.modifiedField(fieldNum(LedgerJournalTrans, AccountType));
+
+            DimensionDefault  dim;
+            dim = DEVDimensionHelper::setValueToDefaultDimensionCon(dim,
+                            [DEVDimensionHelper::BusinessUnit(), tutorialLedgerJourLinesStaging.BusinessUnit,
+                             DEVDimensionHelper::Department(),   tutorialLedgerJourLinesStaging.Department,
+                             DEVDimensionHelper::CostCenter(),   tutorialLedgerJourLinesStaging.CostCenter ] );
+                        
+            ledgerJournalTrans.LedgerDimension = LedgerDimensionFacade::serviceCreateLedgerDimension(
+                                              LedgerDefaultAccountHelper::getDefaultAccountFromMainAccountId(tutorialLedgerJourLinesStaging.MainAccount), dim);
+        
+            if (!ledgerJournalTrans.LedgerDimension)
+            {
+                throw error("Missing or invalid ledger dimension for journal process");
+            }
+            ledgerJournalTrans.modifiedField(fieldNum(LedgerJournalTrans, LedgerDimension));
+            ledgerJournalEngine.accountModified(LedgerJournalTrans);
+        
+            /*
+            ledgerJournalTrans.OffsetAccountType = ledgerJournalTransOrig.OffsetAccountType;
+            ledgerJournalTrans.modifiedField(fieldNum(LedgerJournalTrans, OffsetAccountType));
+            ledgerJournalTrans.OffsetLedgerDimension = ledgerJournalTransOrig.OffsetLedgerDimension;
+            ledgerJournalTrans.modifiedField(fieldNum(LedgerJournalTrans, OffsetLedgerDimension));
+            ledgerJournalEngine.offsetAccountModified(ledgerJournalTrans);
+            */
+            //amounts
+            ledgerJournalTrans.CurrencyCode         =   Ledger::accountingCurrency();
+            ledgerJournalEngine.currencyModified(LedgerJournalTrans);
+            if (tutorialLedgerJourLinesStaging.Amount > 0)
+            {
+                ledgerJournalTrans.AmountCurDebit       =   tutorialLedgerJourLinesStaging.Amount;
+            }
+            else
+            {
+                ledgerJournalTrans.AmountCurCredit      =  -tutorialLedgerJourLinesStaging.Amount;
+            }
+
+            //additional fields
+            LedgerJournalTrans.Approver           = HcmWorker::userId2Worker(curuserid());
+            LedgerJournalTrans.Approved           = NoYes::Yes;
+            LedgerJournalTrans.SkipBlockedForManualEntryCheck = true;
+
+            DEV::validateWriteRecordCheck(ledgerJournalTrans);
+            ledgerJournalTrans.insert();
+            ledgerJournalEngine.write(ledgerJournalTrans);
+        }
+
+        tutorialLedgerJourHeaderStaging =  DEVIntegTutorialLedgerJourHeaderStaging::findByMessageRecId(messageTable.RecId, true);
+        tutorialLedgerJourHeaderStaging.LedgerJournalId =  ledgerJournalTable.JournalNum;
+        tutorialLedgerJourHeaderStaging.update();
+        
+
+        ttscommit;
+        return ledgerJournalTable;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>validateDataFromStaging</Name>
+				<Source><![CDATA[
+    void validateDataFromStaging()
+    {
+
+        boolean  isValidLine;
+        DimensionAttribute  attribBU         = DimensionAttribute::findByName(DEVDimensionHelper::BusinessUnit());
+        DimensionAttribute  attribDepartment = DimensionAttribute::findByName(DEVDimensionHelper::Department());
+        DimensionAttribute  attribCostCenter = DimensionAttribute::findByName(DEVDimensionHelper::CostCenter());
+        
+        messageProcessResult.clearValues();
+        while select tutorialLedgerJourLinesStaging
+            order by LineNumber
+            where tutorialLedgerJourLinesStaging.HeaderRefRecId ==  tutorialLedgerJourHeaderStaging.RecId
+        {
+            isValidLine = true;
+            if (! MainAccount::findByMainAccountId(tutorialLedgerJourLinesStaging.MainAccount))
+            {
+                isValidLine = checkFailed(strFmt("Line %1. Maint account %2 doesn't exist", tutorialLedgerJourLinesStaging.LineNumber,
+                                                                                      tutorialLedgerJourLinesStaging.MainAccount));
+            }
+            if (tutorialLedgerJourLinesStaging.BusinessUnit &&
+               ! DimensionAttributeValue::findByDimensionAttributeAndValue(attribBU, tutorialLedgerJourLinesStaging.BusinessUnit, false, true))
+            {
+                isValidLine = checkFailed(strFmt("Line %1. Business Unit %2 doesn't exist", tutorialLedgerJourLinesStaging.LineNumber,
+                                                                                        tutorialLedgerJourLinesStaging.BusinessUnit));
+
+            }
+            if (tutorialLedgerJourLinesStaging.Department &&
+               ! DimensionAttributeValue::findByDimensionAttributeAndValue(attribDepartment, tutorialLedgerJourLinesStaging.Department, false, true))
+            {
+                isValidLine = checkFailed(strFmt("Line %1. Department %2 doesn't exist", tutorialLedgerJourLinesStaging.LineNumber,
+                                                                                     tutorialLedgerJourLinesStaging.Department));
+
+            }
+            if (tutorialLedgerJourLinesStaging.CostCenter &&
+               ! DimensionAttributeValue::findByDimensionAttributeAndValue(attribCostCenter, tutorialLedgerJourLinesStaging.CostCenter, false, true))
+            {
+                isValidLine = checkFailed(strFmt("Line %1. Cost Center %2 doesn't exist", tutorialLedgerJourLinesStaging.LineNumber,
+                                                                                      tutorialLedgerJourLinesStaging.CostCenter));
+
+            }
+            if (! isValidLine)
+            {
+                messageProcessResult.incErrorCount();
+            }
+            else
+            {
+                messageProcessResult.incProcessedCount();
+            }
+        }
+        if (messageProcessResult.hasErrors())
+        {
+            throw error(strFmt("File %1 has %2 validation errors", messageTable.Name, messageProcessResult.getErrorCount()));
+        }
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>readFileToStaging</Name>
+				<Source><![CDATA[
+    void readFileToStaging()
+    {
+        DEVIntegTutorialLedgerHeaderContract        tutorialGLHeaderContract ;
+        DEVIntegTutorialLedgerHeaderLinesContract   tutorialGLHeaderLinesContract;
+        
+        str serializedJSONstr;
+        serializedJSONstr = messageTable.getDataString();
+        if (! serializedJSONstr)
+        {
+            throw error(strFmt("Message %1 is empty", messageTable.Name));
+        }
+        tutorialGLHeaderContract = FormJsonSerializer::deserializeObject(classNum(DEVIntegTutorialLedgerHeaderContract), serializedJSONstr);
+
+        ttsbegin;
+        int lineNum;
+
+        tutorialLedgerJourHeaderStaging = null;
+        tutorialLedgerJourHeaderStaging.CompanyId = tutorialGLHeaderContract.parmCompanyId();
+        tutorialLedgerJourHeaderStaging.MessageId = messageTable.RecId;
+        tutorialLedgerJourHeaderStaging.PolicyNumber = tutorialGLHeaderContract.parmPolicyNumber();
+        tutorialLedgerJourHeaderStaging.ClaimId      = tutorialGLHeaderContract.parmClaimId();
+
+        DEV::validateWriteRecordCheck(tutorialLedgerJourHeaderStaging);
+        tutorialLedgerJourHeaderStaging.insert();
+
+        List            linesList = tutorialGLHeaderContract.parmLines();
+        ListEnumerator  le;
+
+        if (linesList && linesList.elements())
+        {
+            le = linesList.getEnumerator();
+            while(le.moveNext())
+            {
+                tutorialGLHeaderLinesContract = le.current();
+
+                tutorialLedgerJourLinesStaging.clear();
+                lineNum++;
+                tutorialLedgerJourLinesStaging.LineNumber     = lineNum;
+                tutorialLedgerJourLinesStaging.HeaderRefRecId = tutorialLedgerJourHeaderStaging.RecId;
+                tutorialLedgerJourLinesStaging.MainAccount  = tutorialGLHeaderLinesContract.parmMainAccount();
+                tutorialLedgerJourLinesStaging.BusinessUnit = tutorialGLHeaderLinesContract.parmBusinessUnit();
+                tutorialLedgerJourLinesStaging.Department   = tutorialGLHeaderLinesContract.parmDepartment();
+                tutorialLedgerJourLinesStaging.CostCenter   = tutorialGLHeaderLinesContract.parmCostCenter();
+                tutorialLedgerJourLinesStaging.Amount       = tutorialGLHeaderLinesContract.parmAmount();
+
+                DEV::validateWriteRecordCheck(tutorialLedgerJourLinesStaging);
+                tutorialLedgerJourLinesStaging.insert();
+            }
+        }
+
+        if (! lineNum)
+        {
+            throw error(strFmt("Message %1 is empty", messageTable.Name));
+        }
+        messageTable = DEVIntegMessageTable::findRecId(messageTable.RecId, true);
+        messageTable.IsParsed = true;
+        messageTable.update();
+
+        ttscommit;
+        
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>setViewStagingButton</Name>
+				<Source><![CDATA[
+    public void setViewStagingButton(FormFunctionButtonControl  _viewStagingButtonControl, DEVIntegMessageTable  _messageTable)
+    {
+        _viewStagingButtonControl.visible(_messageTable.IsParsed);
+        _viewStagingButtonControl.menuItemName(menuItemDisplayStr(DEVIntegTutorialLedgerJourHeaderStaging));
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>getDescription</Name>
+				<Source><![CDATA[
+    public str getDescription()
+    {
+        return "Ledger journal import JSON sample";
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

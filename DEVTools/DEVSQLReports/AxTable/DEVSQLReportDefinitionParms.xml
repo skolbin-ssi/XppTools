@@ -7,7 +7,42 @@ public class DEVSQLReportDefinitionParms extends common
 {
 }
 ]]></Declaration>
-		<Methods />
+		<Methods>
+			<Method>
+				<Name>defaultParmValue</Name>
+				<Source><![CDATA[
+    public anytype defaultParmValue()
+    {
+        switch(this.Type)
+        {
+            case DEVSQLDefinitionParmType::String:
+                return '';
+            case DEVSQLDefinitionParmType::Date:
+                return dateNull();
+        }
+
+        return '';
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>defaultEDTName</Name>
+				<Source><![CDATA[
+    public str defaultEDTName()
+    {
+        switch(this.Type)
+        {
+            case DEVSQLDefinitionParmType::Date:
+                return extendedTypeStr(TransDate);
+        }
+
+        return extendedTypeStr(Description);
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
 	</SourceCode>
 	<Label>SQL Report parameters</Label>
 	<SubscriberAccessLevel>
@@ -66,6 +101,9 @@ public class DEVSQLReportDefinitionParms extends common
 					<DataField>Type</DataField>
 				</AxTableFieldGroupField>
 				<AxTableFieldGroupField>
+					<DataField>EDTName</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
 					<DataField>Label</DataField>
 				</AxTableFieldGroupField>
 				<AxTableFieldGroupField>
@@ -115,6 +153,13 @@ public class DEVSQLReportDefinitionParms extends common
 			i:type="AxTableFieldEnum">
 			<Name>Type</Name>
 			<EnumType>DEVSQLDefinitionParmType</EnumType>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldString">
+			<Name>EDTName</Name>
+			<ExtendedDataType>Name</ExtendedDataType>
+			<HelpText>EDT name for dialog</HelpText>
+			<Label>EDT name</Label>
 		</AxTableField>
 	</Fields>
 	<FullTextIndexes />

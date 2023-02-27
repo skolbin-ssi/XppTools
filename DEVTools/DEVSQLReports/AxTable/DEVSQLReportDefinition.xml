@@ -29,6 +29,19 @@ public class DEVSQLReportDefinition extends common
 
 ]]></Source>
 			</Method>
+			<Method>
+				<Name>initValue</Name>
+				<Source><![CDATA[
+    public void initValue()
+    {
+        super();
+
+        this.IsDisplayLastUsedDialogParms = true;
+        this.IsSaveReportInLog = true;
+    }
+
+]]></Source>
+			</Method>
 		</Methods>
 	</SourceCode>
 	<Label>SQL Report definition</Label>
@@ -111,6 +124,21 @@ public class DEVSQLReportDefinition extends common
 				</AxTableFieldGroupField>
 			</Fields>
 		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>AdvancedGroup</Name>
+			<Label>Advanced</Label>
+			<Fields>
+				<AxTableFieldGroupField>
+					<DataField>FormatParameters</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>IsSaveReportInLog</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>IsDisplayLastUsedDialogParms</DataField>
+				</AxTableFieldGroupField>
+			</Fields>
+		</AxTableFieldGroup>
 	</FieldGroups>
 	<Fields>
 		<AxTableField xmlns=""
@@ -137,6 +165,29 @@ public class DEVSQLReportDefinition extends common
 			<ExtendedDataType>PositiveNumber</ExtendedDataType>
 			<HelpText>Maximum allowed rows</HelpText>
 			<Label>Max rows</Label>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldString">
+			<Name>FormatParameters</Name>
+			<ExtendedDataType>NotesLine</ExtendedDataType>
+			<HelpText>List of tables used to format the output(separated by ,)</HelpText>
+			<Label>Format</Label>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldEnum">
+			<Name>IsSaveReportInLog</Name>
+			<ExtendedDataType>NoYesId</ExtendedDataType>
+			<HelpText>Save report file in log</HelpText>
+			<Label>Save in log</Label>
+			<EnumType>NoYes</EnumType>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldEnum">
+			<Name>IsDisplayLastUsedDialogParms</Name>
+			<ExtendedDataType>NoYesId</ExtendedDataType>
+			<HelpText>Display last used parms in dialog</HelpText>
+			<Label>Display last used parms</Label>
+			<EnumType>NoYes</EnumType>
 		</AxTableField>
 	</Fields>
 	<FullTextIndexes />

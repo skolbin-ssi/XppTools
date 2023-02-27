@@ -25,7 +25,12 @@ class DEVIntegTutorialImportLedgerJournal extends DEVIntegProcessMessageBase
    
         if (! messageTable.IsParsed) //reading to staging tables
         {
+            ttsbegin;
+            delete_from tutorialLedgerJourHeaderStaging
+                where tutorialLedgerJourHeaderStaging.MessageId == _messageTable.RecId;
+                
             this.readFileToStaging();
+            ttscommit;
         }
         this.createDataFromStaging();
     }
@@ -57,6 +62,8 @@ class DEVIntegTutorialImportLedgerJournal extends DEVIntegProcessMessageBase
             ttsbegin;
             messageProcessResult.parmProcessPrefix("Journal creation");
             ledgerJournalTable = this.createLedgerJournal();
+
+            this.updateDocumentDescription(ledgerJournalTable.JournalNum);
             
             if (messageTypeTable.IsAutoPostJournal)
             {
@@ -80,13 +87,35 @@ class DEVIntegTutorialImportLedgerJournal extends DEVIntegProcessMessageBase
         LedgerJournalEngine     ledgerJournalEngine;
 
         int                     numLines;
+        QueryRun                queryRun;
+        Query                   query = new Query();
+        QueryBuildDataSource    qBDS = query.addDataSource(tableNum(DEVIntegTutorialLedgerJourLinesStaging));
+
+        DEVIntegTutorialLedgerJourLinesStaging      ledgerJourLinesStagingUpdated;
         
+
         ttsbegin;
 
-        while select tutorialLedgerJourLinesStaging
-            order by LineNumber
-            where tutorialLedgerJourLinesStaging.HeaderRefRecId ==  tutorialLedgerJourHeaderStaging.RecId
+        qBDS.addRange(fieldNum(DEVIntegTutorialLedgerJourLinesStaging, HeaderRefRecId)).value(
+                SysQuery::value(tutorialLedgerJourHeaderStaging.RecId));
+        qBDS.addGroupByField(fieldNum(DEVIntegTutorialLedgerJourLinesStaging, HeaderRefRecId));
+        qBDS.addGroupByField(fieldNum(DEVIntegTutorialLedgerJourLinesStaging, MainAccount));
+        qBDS.addGroupByField(fieldNum(DEVIntegTutorialLedgerJourLinesStaging, BusinessUnit));
+        qBDS.addGroupByField(fieldNum(DEVIntegTutorialLedgerJourLinesStaging, Department));
+        qBDS.addGroupByField(fieldNum(DEVIntegTutorialLedgerJourLinesStaging, CostCenter));
+        qBDS.addSelectionField(fieldNum(DEVIntegTutorialLedgerJourLinesStaging, Amount), SelectionField::Sum);
+        qBDS.addGroupByField(fieldNum(DEVIntegTutorialLedgerJourLinesStaging, ExternalSystem));
+        if (messageTypeTable.IsGroupByDescription)
         {
+            qBDS.addGroupByField(fieldNum(DEVIntegTutorialLedgerJourLinesStaging, Description));
+        }
+        queryRun = new QueryRun(query);
+        while (queryRun.next())
+        {
+            tutorialLedgerJourLinesStaging = queryRun.get(tableNum(DEVIntegTutorialLedgerJourLinesStaging));
+        //while select tutorialLedgerJourLinesStaging
+        //    order by LineNumber
+        //    where tutorialLedgerJourLinesStaging.HeaderRefRecId ==  tutorialLedgerJourHeaderStaging.RecId
             numLines++;
             if (!ledgerJournalTable.RecId)
             {
@@ -153,9 +182,29 @@ class DEVIntegTutorialImportLedgerJournal extends DEVIntegProcessMessageBase
             LedgerJournalTrans.Approved           = NoYes::Yes;
             LedgerJournalTrans.SkipBlockedForManualEntryCheck = true;
 
+            if (tutorialLedgerJourLinesStaging.Description)
+            {
+                ledgerJournalTrans.Txt = tutorialLedgerJourLinesStaging.Description;
+            }
+
             DEV::validateWriteRecordCheck(ledgerJournalTrans);
             ledgerJournalTrans.insert();
             ledgerJournalEngine.write(ledgerJournalTrans);
+
+            ledgerJourLinesStagingUpdated = null;
+            while select forupdate ledgerJourLinesStagingUpdated
+                where ledgerJourLinesStagingUpdated.HeaderRefRecId == tutorialLedgerJourLinesStaging.HeaderRefRecId &&
+                      ledgerJourLinesStagingUpdated.MainAccount == tutorialLedgerJourLinesStaging.MainAccount &&
+                      ledgerJourLinesStagingUpdated.BusinessUnit == tutorialLedgerJourLinesStaging.BusinessUnit &&
+                      ledgerJourLinesStagingUpdated.Department == tutorialLedgerJourLinesStaging.Department &&
+                      ledgerJourLinesStagingUpdated.CostCenter == tutorialLedgerJourLinesStaging.CostCenter &&
+                      ledgerJourLinesStagingUpdated.ExternalSystem == tutorialLedgerJourLinesStaging.ExternalSystem &&
+               (  (messageTypeTable.IsGroupByDescription ? false : true) || ledgerJourLinesStagingUpdated.Description == tutorialLedgerJourLinesStaging.Description )
+            {
+                ledgerJourLinesStagingUpdated.LedgerJournalTransRecId = ledgerJournalTrans.RecId;
+                ledgerJourLinesStagingUpdated.Voucher                 = ledgerJournalTrans.Voucher;
+                ledgerJourLinesStagingUpdated.update();
+            }
         }
 
         tutorialLedgerJourHeaderStaging =  DEVIntegTutorialLedgerJourHeaderStaging::findByMessageRecId(messageTable.RecId, true);
@@ -263,12 +312,35 @@ class DEVIntegTutorialImportLedgerJournal extends DEVIntegProcessMessageBase
             tutorialLedgerJourLinesStaging.clear();
             lineNum++;
             tutorialLedgerJourLinesStaging.LineNumber     = lineNum;
+            tutorialLedgerJourLinesStaging.MessageId      = messageTable.RecId;
             tutorialLedgerJourLinesStaging.HeaderRefRecId = tutorialLedgerJourHeaderStaging.RecId;
             tutorialLedgerJourLinesStaging.MainAccount  = fileReader.getStringByName('MainAccount');
-            tutorialLedgerJourLinesStaging.BusinessUnit = fileReader.getStringByName('BusinessUnit');
+            
+            tutorialLedgerJourLinesStaging.BusinessUnitExternal = fileReader.getStringByName('BusinessUnit');
             tutorialLedgerJourLinesStaging.Department   = fileReader.getStringByName('Department');
             tutorialLedgerJourLinesStaging.CostCenter   = fileReader.getStringByName('CostCenter');
             tutorialLedgerJourLinesStaging.Amount       = fileReader.getRealByName('Amount');
+            if (fileReader.getColumnIdByName('Description'))
+            {
+                tutorialLedgerJourLinesStaging.Description = fileReader.getStringByName('Description');
+            }
+            if (fileReader.getColumnIdByName('External system'))
+            {
+                tutorialLedgerJourLinesStaging.ExternalSystem = fileReader.getStringByName('External system');
+            }
+
+            DEVIntegTutorialLedgerMappingBU  tutorialLedgerMappingBU;
+            tutorialLedgerMappingBU = DEVIntegTutorialLedgerMappingBU::find(tutorialLedgerJourLinesStaging.BusinessUnitExternal,
+                                                                            tutorialLedgerJourLinesStaging.Description);
+            if (tutorialLedgerMappingBU.BusinessUnit)
+            {
+                tutorialLedgerJourLinesStaging.BusinessUnit = tutorialLedgerMappingBU.BusinessUnit;
+            }
+            else
+            {
+                tutorialLedgerJourLinesStaging.BusinessUnit = tutorialLedgerJourLinesStaging.BusinessUnitExternal;
+            }
+
 
             DEV::validateWriteRecordCheck(tutorialLedgerJourLinesStaging);
             tutorialLedgerJourLinesStaging.insert();

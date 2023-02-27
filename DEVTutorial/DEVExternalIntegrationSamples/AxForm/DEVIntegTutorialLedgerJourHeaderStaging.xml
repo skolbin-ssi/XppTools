@@ -31,7 +31,7 @@ public class DEVIntegTutorialLedgerJourHeaderStaging extends FormRun
                     Args args = new Args();
                     args.record(DEVIntegTutorialLedgerJourHeaderStaging.ledgerJournalTable());
 
-                    MenuFunction  mf = new MenuFunction(menuitemDisplayStr(LedgerJournalTable_AllPosted), MenuItemType::Display);
+                    MenuFunction  mf = new MenuFunction(menuitemDisplayStr(LedgerJournalTable_AllJournals), MenuItemType::Display);
                     mf.run(args);
                 }
             }
@@ -49,6 +49,9 @@ public class DEVIntegTutorialLedgerJourHeaderStaging extends FormRun
 			<Name>DEVIntegTutorialLedgerJourHeaderStaging</Name>
 			<Table>DEVIntegTutorialLedgerJourHeaderStaging</Table>
 			<Fields>
+				<AxFormDataSourceField>
+					<DataField>ClaimId</DataField>
+				</AxFormDataSourceField>
 				<AxFormDataSourceField>
 					<DataField>CompanyId</DataField>
 				</AxFormDataSourceField>
@@ -72,6 +75,9 @@ public class DEVIntegTutorialLedgerJourHeaderStaging extends FormRun
 				</AxFormDataSourceField>
 				<AxFormDataSourceField>
 					<DataField>Partition</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>PolicyNumber</DataField>
 				</AxFormDataSourceField>
 				<AxFormDataSourceField>
 					<DataField>RecId</DataField>
@@ -109,13 +115,25 @@ public class DEVIntegTutorialLedgerJourHeaderStaging extends FormRun
 					<DataField>Department</DataField>
 				</AxFormDataSourceField>
 				<AxFormDataSourceField>
+					<DataField>Description</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>ExternalSystem</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
 					<DataField>HeaderRefRecId</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>LedgerJournalTransRecId</DataField>
 				</AxFormDataSourceField>
 				<AxFormDataSourceField>
 					<DataField>LineNumber</DataField>
 				</AxFormDataSourceField>
 				<AxFormDataSourceField>
 					<DataField>MainAccount</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>MessageId</DataField>
 				</AxFormDataSourceField>
 				<AxFormDataSourceField>
 					<DataField>ModifiedBy</DataField>
@@ -131,6 +149,9 @@ public class DEVIntegTutorialLedgerJourHeaderStaging extends FormRun
 				</AxFormDataSourceField>
 				<AxFormDataSourceField>
 					<DataField>TableId</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>Voucher</DataField>
 				</AxFormDataSourceField>
 			</Fields>
 			<ReferencedDataSources />
@@ -161,6 +182,9 @@ public class DEVIntegTutorialLedgerJourHeaderStaging extends FormRun
 					<DataField>DocumentDescription</DataField>
 				</AxFormDataSourceField>
 				<AxFormDataSourceField>
+					<DataField>HoldDescription</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
 					<DataField>IsParsed</DataField>
 				</AxFormDataSourceField>
 				<AxFormDataSourceField>
@@ -182,6 +206,9 @@ public class DEVIntegTutorialLedgerJourHeaderStaging extends FormRun
 					<DataField>Path</DataField>
 				</AxFormDataSourceField>
 				<AxFormDataSourceField>
+					<DataField>ProcessingAttempts</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
 					<DataField>ProcessingEndDateTime</DataField>
 				</AxFormDataSourceField>
 				<AxFormDataSourceField>
@@ -198,6 +225,9 @@ public class DEVIntegTutorialLedgerJourHeaderStaging extends FormRun
 				</AxFormDataSourceField>
 				<AxFormDataSourceField>
 					<DataField>RecordsWithErrors</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>ServBusLabel</DataField>
 				</AxFormDataSourceField>
 				<AxFormDataSourceField>
 					<DataField>SessionId</DataField>
@@ -311,6 +341,24 @@ public class DEVIntegTutorialLedgerJourHeaderStaging extends FormRun
 												<DataField>LedgerJournalId</DataField>
 												<DataSource>DEVIntegTutorialLedgerJourHeaderStaging</DataSource>
 											</AxFormControl>
+											<AxFormControl xmlns=""
+												i:type="AxFormStringControl">
+												<Name>Data_PolicyNumber</Name>
+												<Type>String</Type>
+												<FormControlExtension
+													i:nil="true" />
+												<DataField>PolicyNumber</DataField>
+												<DataSource>DEVIntegTutorialLedgerJourHeaderStaging</DataSource>
+											</AxFormControl>
+											<AxFormControl xmlns=""
+												i:type="AxFormStringControl">
+												<Name>Data_ClaimId</Name>
+												<Type>String</Type>
+												<FormControlExtension
+													i:nil="true" />
+												<DataField>ClaimId</DataField>
+												<DataSource>DEVIntegTutorialLedgerJourHeaderStaging</DataSource>
+											</AxFormControl>
 										</Controls>
 										<DataGroup>Data</DataGroup>
 										<DataSource>DEVIntegTutorialLedgerJourHeaderStaging</DataSource>
@@ -332,6 +380,16 @@ public class DEVIntegTutorialLedgerJourHeaderStaging extends FormRun
 											i:nil="true" />
 										<DataField>ProcessingEndDateTime</DataField>
 										<DataSource>DEVIntegMessageTable</DataSource>
+									</AxFormControl>
+									<AxFormControl xmlns=""
+										i:type="AxFormReferenceGroupControl">
+										<Name>DEVIntegTutorialLedgerJourHeaderStaging_MessageId</Name>
+										<Type>ReferenceGroup</Type>
+										<FormControlExtension
+											i:nil="true" />
+										<Controls />
+										<DataSource>DEVIntegTutorialLedgerJourHeaderStaging</DataSource>
+										<ReferenceField>MessageId</ReferenceField>
 									</AxFormControl>
 								</Controls>
 								<DataSource>DEVIntegTutorialLedgerJourHeaderStaging</DataSource>
@@ -381,6 +439,15 @@ public class DEVIntegTutorialLedgerJourHeaderStaging extends FormRun
 											i:nil="true" />
 										<Controls>
 											<AxFormControl xmlns=""
+												i:type="AxFormIntegerControl">
+												<Name>Data1_LineNumber</Name>
+												<Type>Integer</Type>
+												<FormControlExtension
+													i:nil="true" />
+												<DataField>LineNumber</DataField>
+												<DataSource>DEVIntegTutorialLedgerJourLinesStaging</DataSource>
+											</AxFormControl>
+											<AxFormControl xmlns=""
 												i:type="AxFormStringControl">
 												<Name>Data1_MainAccount</Name>
 												<Type>String</Type>
@@ -396,6 +463,15 @@ public class DEVIntegTutorialLedgerJourHeaderStaging extends FormRun
 												<FormControlExtension
 													i:nil="true" />
 												<DataField>BusinessUnit</DataField>
+												<DataSource>DEVIntegTutorialLedgerJourLinesStaging</DataSource>
+											</AxFormControl>
+											<AxFormControl xmlns=""
+												i:type="AxFormStringControl">
+												<Name>Data1_BusinessUnitExternal</Name>
+												<Type>String</Type>
+												<FormControlExtension
+													i:nil="true" />
+												<DataField>BusinessUnitExternal</DataField>
 												<DataSource>DEVIntegTutorialLedgerJourLinesStaging</DataSource>
 											</AxFormControl>
 											<AxFormControl xmlns=""
@@ -423,6 +499,42 @@ public class DEVIntegTutorialLedgerJourHeaderStaging extends FormRun
 												<FormControlExtension
 													i:nil="true" />
 												<DataField>Amount</DataField>
+												<DataSource>DEVIntegTutorialLedgerJourLinesStaging</DataSource>
+											</AxFormControl>
+											<AxFormControl xmlns=""
+												i:type="AxFormStringControl">
+												<Name>Data1_Description</Name>
+												<Type>String</Type>
+												<FormControlExtension
+													i:nil="true" />
+												<DataField>Description</DataField>
+												<DataSource>DEVIntegTutorialLedgerJourLinesStaging</DataSource>
+											</AxFormControl>
+											<AxFormControl xmlns=""
+												i:type="AxFormStringControl">
+												<Name>Data1_ExternalSystem</Name>
+												<Type>String</Type>
+												<FormControlExtension
+													i:nil="true" />
+												<DataField>ExternalSystem</DataField>
+												<DataSource>DEVIntegTutorialLedgerJourLinesStaging</DataSource>
+											</AxFormControl>
+											<AxFormControl xmlns=""
+												i:type="AxFormStringControl">
+												<Name>Data1_Voucher</Name>
+												<Type>String</Type>
+												<FormControlExtension
+													i:nil="true" />
+												<DataField>Voucher</DataField>
+												<DataSource>DEVIntegTutorialLedgerJourLinesStaging</DataSource>
+											</AxFormControl>
+											<AxFormControl xmlns=""
+												i:type="AxFormInt64Control">
+												<Name>Data1_LedgerJournalTransRecId</Name>
+												<Type>Int64</Type>
+												<FormControlExtension
+													i:nil="true" />
+												<DataField>LedgerJournalTransRecId</DataField>
 												<DataSource>DEVIntegTutorialLedgerJourLinesStaging</DataSource>
 											</AxFormControl>
 										</Controls>
