@@ -11,9 +11,10 @@ This repository contains 3 D365FO models:
     - [-Display table relation fields](#-display-table-relation-fields)
     - [-Editable table browser](#-editable-table-browser)
     - [-List of Values to Range](#-list-of-values-to-range)
-    - [-Execute direct SQL in D365FO database](#-execute-direct-sql-in-d365fo-database)
+    - [-Execute direct SQL in the D365FO database](#-execute-direct-sql-in-the-d365fo-database)
     - [-SQL reports](#-sql-reports)
     - [-D365FO Infolog call stack](#-d365fo-infolog-call-stack)
+    - [-D365FO DFM Tools](#-d365fo-dfm-tools)
   - [DEVCommon model](#devcommon-model)
     - [-DEV class](#-dev-class)
     - [-DEVDimensionHelper class](#-devdimensionhelper-class)
@@ -30,6 +31,8 @@ This repository contains 3 D365FO models:
     - [-Multicompany DMF integration in Dynamics 365 FinOps using X++](#-multicompany-dmf-integration-in-dynamics-365-finops-using-x)
     - [-XppInteg - Azure Service Bus integration solution for Dynamics 365 FinOps](#-xppinteg---azure-service-bus-integration-solution-for-dynamics-365-finops)
     - [-XppInteg - Import purchase orders from XML files into D365FO](#-xppinteg---import-purchase-orders-from-xml-files-into-d365fo)
+    - [-Implement Periodic Data Export from D365FO to SFTP](#-implement-periodic-data-export-from-d365fo-to-sftp)
+    - [-D365FO Integration: Event-Based Exports to External Web Services](#-d365fo-integration-event-based-exports-to-external-web-services)
   - [Installation](#installation)
   - [Contribution](#contribution)
 
@@ -88,9 +91,9 @@ Sub-model name: DEVListOfValuesToRange
 
 **[⬆ back to top](#XppTools)**
 
-### -Execute direct SQL in D365FO database
+### -Execute direct SQL in the D365FO database
 
-'Execute direct SQL' is a simple form that allows to write and execute direct SQL from the browser on D365FO database.
+'Execute direct SQL' is a simple form that allows one to write and execute direct SQL from the browser on the D365FO database.
 
 Full description: [Execute direct SQL in D365FO database](https://denistrunin.com/xpptools-sqlexecute/)
 Sub-model name: DEVSQLExecute
@@ -99,7 +102,7 @@ Sub-model name: DEVSQLExecute
 
 ### -SQL reports
 
-'SQL reports' functionality is a set of forms that allow to define and execute direct SQL reports in the D365FO database. There is a "SQL definition" table that defines the SQL text, a "SQL format" table that defines the output format(e.g. CSV, Excel, etc..) and SQL Report table where the user can run the report and output the result to the selected format.
+'SQL reports' functionality is a set of forms that allow to define and execute direct SQL reports in the D365FO database. There is a "SQL definition" table that defines the SQL text, a "SQL format" table that defines the output format(e.g. CSV, Excel, etc..) and an SQL Report table where the user can run the report and output the result to the selected format.
 
 Sub-model name: DEVSQLReports
 
@@ -111,6 +114,15 @@ Full description: [D365FO Infolog call stack](https://denistrunin.com/xpptools-d
 Sub-model name: DEVCallStackInfolog
 
 ![DEV Call Stack](assets/DevCallStackInfoMain.jpg)
+
+### -D365FO DFM Tools
+
+Refresh Data Entities Faster in D365FO.
+
+Full description: [How to Refresh Data Entities Faster in D365FO.](https://www.linkedin.com/pulse/how-refresh-data-entities-faster-d365fo-denis-trunin)
+Sub-model name: DEVDMFTools
+
+![DEV DMF Tools](assets/DEVDMFTools.png)
 
 **[⬆ back to top](#XppTools)**
 
@@ -172,7 +184,7 @@ A sample code to Create a new design for Sales Invoice report in D365FO (https:/
 
 ## DEVExternalIntegration submodel
 
-Contains "External integration" framework. It includes [core module](https://github.com/TrudAX/XppTools/tree/master/DEVTutorial/DEVExternalIntegration) and [samples](https://github.com/TrudAX/XppTools/tree/master/DEVTutorial/DEVExternalIntegrationSamples)
+Contains "External integration" framework. It includes [core module](https://github.com/TrudAX/XppTools/tree/master/DEVTutorial/DEVExternalIntegration) and [samples](https://github.com/TrudAX/XppTools/tree/master/DEVTutorial/DEVExternalIntegrationSamples). The External Integration framework provides a standardized approach to developing X++ based integrations. It emphasizes ease of support and expedites the development process.
 
 ### -File-based integration in Dynamics 365 FinOps using X++
 
@@ -190,20 +202,42 @@ A sample code to implement Azure Service Bus integration in D365FO using X++ (ht
 
 A sample approach how to implement XML based integration by importing purchase orders from Azure File Share in D365FO using X++ (https://denistrunin.com/xpptools-integfilesharexmlpurch/).
 
+### -Implement Periodic Data Export from D365FO to SFTP
+
+How to implement various scenarios for periodic data export from D365FO to a file and uploading it to SFTP server (https://denistrunin.com/integration-outboundsftp/).
+
+### -D365FO Integration: Event-Based Exports to External Web Services
+
+How to implement robust, efficient integrations between Dynamics 365 Finance and Operations and external Web Services. (https://denistrunin.com/integration-outboundweb/).
+
 **[⬆ back to top](#XppTools)**
 
 ## Installation
 
-1. Download the Source code from this GitHub repo into the Temp directory on the DEV VM.
-2. Copy **DEVTools**(or DEVGlobal, DEVTutorial) folder to your package folder (C:\AOSService\PackagesLocalDirectory )
-3. Start Visual Studio and Run compile for the **DEVTools** folder (Dynamics 365 –Build models.. – Select DEVTools)
-4. Run database sync - **Invoke-D365DbSyncModule -Module "DEVTools"**
+Download the Source code from this GitHub repo into the Temp directory on the DEV VM.
+
+For **DEVTools,** I recommend creating a separate model:
+
+1. Copy **DEVTools** folder to your package folder (C:\AOSService\PackagesLocalDirectory )
+2. Start Visual Studio and Run compile for the **DEVTools** folder (Dynamics 365 –Build models.. – Select DEVTools)
+3. Run database sync - **Invoke-D365DbSyncModule -Module "DEVTools"**
 
 ![Copy to local folder](assets/CopyFolderToLocal.png)
 
-If you want to contribute - change the objects using Visual Studio in the **DEVTools** model, copy the changed elements(xml files) back into the Temp folder and create GitHub pull request from this Temp folder.
+For **External integration,** I recommend creating submodels in your main project model:
 
-If you want to rename elements prefix you can use this tool that can change multiple file names - **Bulk Rename Utility**. (From DEV to YourPrefix). Then run **Replace in files** in Notepad++ .
+1. In VS, go to Dynamics 365 - Model Management - Create model.
+2. Create 2 models **DEVCommon** and **DEVExternalIntegration,** for your main project package.
+
+![Submodel create](SubmodelCreate.png)
+
+3. Copy all content from the downloaded models. The project structure should be like this: 
+
+![Folder Structure For Integration](FolderStructureForIntegration.png)
+
+If you want to contribute - change the objects using Visual Studio in the **DEVTools** model, copy the changed elements(XML files) back into the Temp folder and create a GitHub pull request from this Temp folder. [Winmerge](https://winmerge.org/?lang=en) is a tool to compare folders.
+
+If you want to rename element prefix you can use this tool that can change multiple file names - **Bulk Rename Utility**. (From DEV to YourPrefix). Then run **Replace in files** in Notepad++ .
 
 ## Contribution
 

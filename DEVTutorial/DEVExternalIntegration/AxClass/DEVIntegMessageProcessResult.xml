@@ -11,9 +11,56 @@ public class DEVIntegMessageProcessResult
 
     str         processPrefix;
 
+    DEVIntegMessageStatus       messageStatusExternal;
+    boolean                     isMessageStatusSet;
+
+    str         messageBodyStr;
+
 }
 ]]></Declaration>
 		<Methods>
+			<Method>
+				<Name>parmMessageBodyStr</Name>
+				<Source><![CDATA[
+    public str parmMessageBodyStr(str _messageBodyStr = messageBodyStr)
+    {
+        messageBodyStr = _messageBodyStr;
+        return messageBodyStr;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>setMessageStatus</Name>
+				<Source><![CDATA[
+    public void setMessageStatus(DEVIntegMessageStatus    _messageStatusExternal)
+    {
+        messageStatusExternal = _messageStatusExternal;
+        isMessageStatusSet    = true;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>isMessageStatusSet</Name>
+				<Source><![CDATA[
+    boolean isMessageStatusSet()
+    {
+        return isMessageStatusSet;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>messageStatusExternal</Name>
+				<Source><![CDATA[
+    DEVIntegMessageStatus     messageStatusExternal()
+    {
+        return messageStatusExternal;
+    }
+
+]]></Source>
+			</Method>
 			<Method>
 				<Name>clearValues</Name>
 				<Source><![CDATA[
@@ -47,7 +94,7 @@ public class DEVIntegMessageProcessResult
 
 ]]></Source>
 			</Method>
-<Method>
+			<Method>
 				<Name>getSkippedCount</Name>
 				<Source><![CDATA[
     public int getSkippedCount()
@@ -56,7 +103,7 @@ public class DEVIntegMessageProcessResult
     }
 
 ]]></Source>
-			</Method>			
+			</Method>
 			<Method>
 				<Name>getProcessedCount</Name>
 				<Source><![CDATA[
@@ -97,7 +144,7 @@ public class DEVIntegMessageProcessResult
 
 ]]></Source>
 			</Method>
-<Method>
+			<Method>
 				<Name>incSkippedCount</Name>
 				<Source><![CDATA[
     void  incSkippedCount()
@@ -106,7 +153,7 @@ public class DEVIntegMessageProcessResult
     }
 
 ]]></Source>
-			</Method>			
+			</Method>
 			<Method>
 				<Name>incErrorCount</Name>
 				<Source><![CDATA[

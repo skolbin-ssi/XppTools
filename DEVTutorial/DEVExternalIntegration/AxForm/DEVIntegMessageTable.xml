@@ -45,10 +45,7 @@ public class DEVIntegMessageTable extends FormRun
                 processMessageBase.setViewStagingButton(DEVIntegViewStagingDataCommon, DEVIntegMessageTable);
             }
 
-            ProcessMessageButton.enabled(DEVIntegMessageTable.Status      == DEVIntegMessageStatus::Ready ||
-                                         DEVIntegMessageTable.Status      == DEVIntegMessageStatus::Cancelled ||
-                                         DEVIntegMessageTable.Status      == DEVIntegMessageStatus::Processing ||
-                                         DEVIntegMessageTable.Status      == DEVIntegMessageStatus::Error);
+            ProcessMessageButton.enabled(DEVIntegMessageTable.isProcessEnabled());
     
             ViewDMFResultButton.visible(DEVIntegMessageTable.DocumentDescription &&
                         DEVIntegMessageTable.messageTypeTable().ClassName == classId2Name(classNum(DEVIntegProcessDMF)));
@@ -127,15 +124,7 @@ public class DEVIntegMessageTable extends FormRun
 						<Source><![CDATA[
         public void clicked()
         {
-            Filename fileName = DEVIntegMessageTable.Name;
-            if (fileName)
-            {
-                if (DEVIntegMessageTable.messageTypeTable().connectionTypeResource() == DEVIntegConnectionTypeResource::AzureServiceBus)
-                {
-                    fileName = strFmt('%1.txt', fileName);
-                }
-                File::SendFileToUser(DEVIntegMessageTable.getFileStream(), fileName);
-            }
+            DEVIntegMessageTable.downloadFileAction();
         }
 
 ]]></Source>
@@ -151,15 +140,7 @@ public class DEVIntegMessageTable extends FormRun
 						<Source><![CDATA[
         public void clicked()
         {
-            try
-            {
-                DEVIntegMessageProcessor messageProcessor = DEVIntegMessageProcessor::construct(DEVIntegMessageTable.messageTypeTable());
-                messageProcessor.processMessage(DEVIntegMessageTable);
-            }
-            finally
-            {
-                DEV::dsResearch(DEVIntegMessageTable);
-            }
+            DEVIntegMessageProcessor::processMessageFromForm(DEVIntegMessageTable);
         }
 
 ]]></Source>
@@ -210,31 +191,7 @@ public class DEVIntegMessageTable extends FormRun
 						<Source><![CDATA[
         public void clicked()
         {
-            DEVIntegMessageTable        integMessageTableLocal, integMessageTableUpd;
-            Dialog                      dialog = new Dialog("Hold reason");
-            DialogField                 df =  dialog.addField(extendedTypeStr(DEVIntegOnHoldDescription), "Hold reason", "Specify a on-hold reason");
-            DEVIntegOnHoldDescription   holdReason;
-            ;
-            if (dialog.run())
-            {
-                holdReason = df.value();
-                for(integMessageTableLocal = DEVIntegMessageTable_ds.getFirst(true) ? DEVIntegMessageTable_ds.getFirst(true) : DEVIntegMessageTable_ds.cursor();
-                integMessageTableLocal.RecId;
-                integMessageTableLocal = DEVIntegMessageTable_ds.getNext())
-                {
-                    ttsbegin;
-                    integMessageTableUpd = DEVIntegMessageTable::findRecId(integMessageTableLocal.RecId, true);
-                    if (integMessageTableUpd.RecId && integMessageTableUpd.isHoldAvailiable())
-                    {
-                        integMessageTableUpd.HoldDescription = holdReason;
-                        integMessageTableUpd.Status          = DEVIntegMessageStatus::Cancelled;
-                        integMessageTableUpd.update();
-                    }
-
-                    ttscommit;
-                }
-                DEVIntegMessageTable_ds.research(true);
-            }
+            DEVIntegMessageCancel::createCancelDialogFromForm(DEVIntegMessageTable);
         }
 
 ]]></Source>
@@ -265,6 +222,9 @@ public class DEVIntegMessageTable extends FormRun
 					<DataField>DocumentDescription</DataField>
 				</AxFormDataSourceField>
 				<AxFormDataSourceField>
+					<DataField>Duration</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
 					<DataField>HoldDescription</DataField>
 				</AxFormDataSourceField>
 				<AxFormDataSourceField>
@@ -284,6 +244,9 @@ public class DEVIntegMessageTable extends FormRun
 				</AxFormDataSourceField>
 				<AxFormDataSourceField>
 					<DataField>Name</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>ParentMessageId</DataField>
 				</AxFormDataSourceField>
 				<AxFormDataSourceField>
 					<DataField>Partition</DataField>
@@ -488,6 +451,7 @@ public class DEVIntegMessageTable extends FormRun
 								<FormControlExtension
 									i:nil="true" />
 								<AutoRefreshData>Yes</AutoRefreshData>
+								<MultiSelect>Yes</MultiSelect>
 								<NeedsRecord>Yes</NeedsRecord>
 								<Text>Process</Text>
 							</AxFormControl>
@@ -754,6 +718,15 @@ public class DEVIntegMessageTable extends FormRun
 										<DataSource>DEVIntegMessageTable</DataSource>
 									</AxFormControl>
 									<AxFormControl xmlns=""
+										i:type="AxFormIntegerControl">
+										<Name>StatisticsGroup_Duration</Name>
+										<Type>Integer</Type>
+										<FormControlExtension
+											i:nil="true" />
+										<DataField>Duration</DataField>
+										<DataSource>DEVIntegMessageTable</DataSource>
+									</AxFormControl>
+									<AxFormControl xmlns=""
 										i:type="AxFormCheckBoxControl">
 										<Name>StatisticsGroup_IsManualUpload</Name>
 										<Type>CheckBox</Type>
@@ -771,6 +744,16 @@ public class DEVIntegMessageTable extends FormRun
 										<DataMethod>isSessionActive</DataMethod>
 										<DataSource>DEVIntegMessageTable</DataSource>
 										<Items />
+									</AxFormControl>
+									<AxFormControl xmlns=""
+										i:type="AxFormReferenceGroupControl">
+										<Name>StatisticsGroup_ParentMessageId</Name>
+										<Type>ReferenceGroup</Type>
+										<FormControlExtension
+											i:nil="true" />
+										<Controls />
+										<DataSource>DEVIntegMessageTable</DataSource>
+										<ReferenceField>ParentMessageId</ReferenceField>
 									</AxFormControl>
 								</Controls>
 								<Breakable>No</Breakable>

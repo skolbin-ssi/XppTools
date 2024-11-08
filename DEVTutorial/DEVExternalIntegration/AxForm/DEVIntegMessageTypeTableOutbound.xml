@@ -28,10 +28,11 @@ public class DEVIntegMessageTypeTableOutbound extends FormRun
 				<Source><![CDATA[
     void testConnection()
     {
-        DEVIntegMessagesLoadBaseType loadFileShare = DEVIntegMessagesLoadBaseType::constructFromConnectionType(
-            DEVIntegConnectionType::find(DEVIntegMessageTypeTableOutbound.ConnectionTypeId));
+        //DEVIntegMessagesLoadBaseType loadFileShare = DEVIntegMessagesLoadBaseType::constructFromConnectionType(
+        //    DEVIntegConnectionType::find(DEVIntegMessageTypeTableOutbound.ConnectionTypeId));
+        //loadFileShare.testOutboundConnection(DEVIntegMessageTypeTableOutbound);
+        DEVIntegMessagesLoadBaseType loadFileShare = DEVIntegMessagesLoadBaseType::constructFromMessageTypeOutbound(DEVIntegMessageTypeTableOutbound);
         loadFileShare.testOutboundConnection(DEVIntegMessageTypeTableOutbound);
-
     }
 
 ]]></Source>
@@ -54,15 +55,28 @@ public class DEVIntegMessageTypeTableOutbound extends FormRun
         SQLParametersGroup.visible(DEVIntegMessageTypeTableOutbound.ClassName == classStr(DEVIntegExportBulkSQL));
         FileParametersGroup.visible(connectionType.RecId && 
             (connectionType.ConnectionTypeResource == DEVIntegConnectionTypeResource::AzureFileShare ||
-             connectionType.ConnectionTypeResource == DEVIntegConnectionTypeResource::SFTP));
+             connectionType.ConnectionTypeResource == DEVIntegConnectionTypeResource::SFTP ||
+             connectionType.ConnectionTypeResource == DEVIntegConnectionTypeResource::None));
 
-        DEVIntegExportBulkBaseButton.visible(DEVIntegMessageTypeTableOutbound.IsFullExport);
-        ExportAllButton.visible(! DEVIntegMessageTypeTableOutbound.IsFullExport);
+        DEVIntegExportBulkBaseButton.visible(DEVIntegMessageTypeTableOutbound.IsFullExport == DEVIntegOutboundExportType::Periodic);
+        ExportAllButton.visible(DEVIntegMessageTypeTableOutbound.IsFullExport == DEVIntegOutboundExportType::DocumentsOnEvents);
 
-        ExportBulkLogButton.visible(DEVIntegMessageTypeTableOutbound.IsFullExport);
+        ExportBulkLogButton.visible(DEVIntegMessageTypeTableOutbound.IsFullExport == DEVIntegOutboundExportType::Periodic);
 
-        BulkQueryTabPage.visible(DEVIntegMessageTypeTableOutbound.IsFullExport && 
+        BulkQueryTabPage.visible(DEVIntegMessageTypeTableOutbound.IsFullExport == DEVIntegOutboundExportType::Periodic  &&
             DEVIntegMessageTypeTableOutbound.queryIsEnabled());
+
+        ManualTestFormButton.visible(false);
+        if (DEVIntegMessageTypeTableOutbound.IsFullExport == DEVIntegOutboundExportType::DocumentsOnEvents)
+        {
+            DEVIntegExportMessageBase  integExportMessageBase  =  DEVIntegMessageTypeTableOutbound.getActionClass();
+            if (integExportMessageBase)
+            {
+                integExportMessageBase.setManualTestButton(ManualTestFormButton);
+            }
+        }
+        DEVIntegExportDocumentLogButton.visible(DEVIntegMessageTypeTableOutbound.IsFullExport == DEVIntegOutboundExportType::DocumentsOnEvents);
+
 
     }
 
@@ -114,7 +128,7 @@ public class DEVIntegMessageTypeTableOutbound extends FormRun
                 sysTableLookup.addLookupfield(fieldnum(TmpHelpIndex, URL));
                 sysTableLookup.setLabel("@SYS7576"); // Description
 
-                if (DEVIntegMessageTypeTableOutbound.IsFullExport)
+                if (DEVIntegMessageTypeTableOutbound.IsFullExport == DEVIntegOutboundExportType::Periodic)
                 {
                     DEVIntegExportBulkBase  baseImportClassBulk;
                     thisClass = new DictClass(classNum(DEVIntegExportBulkBase));
@@ -256,10 +270,12 @@ public class DEVIntegMessageTypeTableOutbound extends FormRun
 						<Source><![CDATA[
         public void clicked()
         {
-            super();
 
-            DEVIntegMessageTypeTableOutbound.querySetDefault();
-
+            if (Box::okCancel(strFmt("Set default query for message %1", DEVIntegMessageTypeTableOutbound.MessageTypeIdOutbound), 
+                    DialogButton::Cancel) == DialogButton::Ok)
+            {
+                DEVIntegMessageTypeTableOutbound.querySetDefault();
+            }
             DEV::dsRefresh(DEVIntegMessageTypeTableOutbound);
         }
 
@@ -316,6 +332,15 @@ public class DEVIntegMessageTypeTableOutbound extends FormRun
 					<DataField>Description</DataField>
 				</AxFormDataSourceField>
 				<AxFormDataSourceField>
+					<DataField>EmailCC</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>EmailRecipient</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>EmailTemplateId</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
 					<DataField>FileColumnDelimiter</DataField>
 				</AxFormDataSourceField>
 				<AxFormDataSourceField>
@@ -329,6 +354,9 @@ public class DEVIntegMessageTypeTableOutbound extends FormRun
 				</AxFormDataSourceField>
 				<AxFormDataSourceField>
 					<DataField>IsFullExport</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>IsSendEmail</DataField>
 				</AxFormDataSourceField>
 				<AxFormDataSourceField>
 					<DataField>MessageTypeIdOutbound</DataField>
@@ -453,6 +481,28 @@ public class DEVIntegMessageTypeTableOutbound extends FormRun
 								<MenuItemName>DEVIntegExportBulkLog</MenuItemName>
 								<Text>Log</Text>
 							</AxFormControl>
+							<AxFormControl xmlns=""
+								i:type="AxFormMenuFunctionButtonControl">
+								<Name>DEVIntegExportDocumentLogButton</Name>
+								<AutoDeclaration>Yes</AutoDeclaration>
+								<Type>MenuFunctionButton</Type>
+								<FormControlExtension
+									i:nil="true" />
+								<DataSource>DEVIntegMessageTypeTableOutbound</DataSource>
+								<MenuItemName>DEVIntegExportDocumentLog</MenuItemName>
+								<NeedsRecord>Yes</NeedsRecord>
+								<Text>Log</Text>
+							</AxFormControl>
+							<AxFormControl xmlns=""
+								i:type="AxFormMenuFunctionButtonControl">
+								<Name>ManualTestFormButton</Name>
+								<AutoDeclaration>Yes</AutoDeclaration>
+								<Type>MenuFunctionButton</Type>
+								<Visible>No</Visible>
+								<FormControlExtension
+									i:nil="true" />
+								<Text>Manual test</Text>
+							</AxFormControl>
 						</Controls>
 						<ArrangeMethod>Vertical</ArrangeMethod>
 					</AxFormControl>
@@ -520,11 +570,7 @@ public class DEVIntegMessageTypeTableOutbound extends FormRun
 									<AxFormControl xmlns=""
 										i:type="AxFormStringControl">
 										<Name>GridGroup_MessageTypeIdOutbound</Name>
-										<FilterExpression>%1</FilterExpression>
-										<HeightMode>Auto</HeightMode>
 										<Type>String</Type>
-										<VerticalSpacing>-1</VerticalSpacing>
-										<WidthMode>Auto</WidthMode>
 										<FormControlExtension
 											i:nil="true" />
 										<DataField>MessageTypeIdOutbound</DataField>
@@ -540,13 +586,14 @@ public class DEVIntegMessageTypeTableOutbound extends FormRun
 										<DataSource>DEVIntegMessageTypeTableOutbound</DataSource>
 									</AxFormControl>
 									<AxFormControl xmlns=""
-										i:type="AxFormCheckBoxControl">
+										i:type="AxFormComboBoxControl">
 										<Name>GridGroup_IsFullExport</Name>
-										<Type>CheckBox</Type>
+										<Type>ComboBox</Type>
 										<FormControlExtension
 											i:nil="true" />
 										<DataField>IsFullExport</DataField>
 										<DataSource>DEVIntegMessageTypeTableOutbound</DataSource>
+										<Items />
 									</AxFormControl>
 								</Controls>
 								<BackgroundColor>WindowBackground</BackgroundColor>
@@ -691,13 +738,14 @@ public class DEVIntegMessageTypeTableOutbound extends FormRun
 									i:nil="true" />
 								<Controls>
 									<AxFormControl xmlns=""
-										i:type="AxFormCheckBoxControl">
+										i:type="AxFormComboBoxControl">
 										<Name>EntiryGroup_IsFullExport</Name>
-										<Type>CheckBox</Type>
+										<Type>ComboBox</Type>
 										<FormControlExtension
 											i:nil="true" />
 										<DataField>IsFullExport</DataField>
 										<DataSource>DEVIntegMessageTypeTableOutbound</DataSource>
+										<Items />
 									</AxFormControl>
 									<AxFormControl xmlns=""
 										i:type="AxFormStringControl">
@@ -929,7 +977,57 @@ public class DEVIntegMessageTypeTableOutbound extends FormRun
 										<DataSource>DEVIntegMessageTypeTableOutbound</DataSource>
 									</AxFormControl>
 								</Controls>
+								<Breakable>No</Breakable>
 								<DataGroup>Advanced</DataGroup>
+								<DataSource>DEVIntegMessageTypeTableOutbound</DataSource>
+							</AxFormControl>
+							<AxFormControl xmlns=""
+								i:type="AxFormGroupControl">
+								<Name>Email</Name>
+								<Type>Group</Type>
+								<FormControlExtension
+									i:nil="true" />
+								<Controls>
+									<AxFormControl xmlns=""
+										i:type="AxFormCheckBoxControl">
+										<Name>Email_IsSendEmail</Name>
+										<Type>CheckBox</Type>
+										<FormControlExtension
+											i:nil="true" />
+										<DataField>IsSendEmail</DataField>
+										<DataSource>DEVIntegMessageTypeTableOutbound</DataSource>
+									</AxFormControl>
+									<AxFormControl xmlns=""
+										i:type="AxFormComboBoxControl">
+										<Name>Email_EmailTemplateId</Name>
+										<Type>ComboBox</Type>
+										<FormControlExtension
+											i:nil="true" />
+										<DataField>EmailTemplateId</DataField>
+										<DataSource>DEVIntegMessageTypeTableOutbound</DataSource>
+										<Items />
+									</AxFormControl>
+									<AxFormControl xmlns=""
+										i:type="AxFormStringControl">
+										<Name>Email_EmailRecipient</Name>
+										<Type>String</Type>
+										<FormControlExtension
+											i:nil="true" />
+										<DataField>EmailRecipient</DataField>
+										<DataSource>DEVIntegMessageTypeTableOutbound</DataSource>
+									</AxFormControl>
+									<AxFormControl xmlns=""
+										i:type="AxFormStringControl">
+										<Name>Email_EmailCC</Name>
+										<Type>String</Type>
+										<FormControlExtension
+											i:nil="true" />
+										<DataField>EmailCC</DataField>
+										<DataSource>DEVIntegMessageTypeTableOutbound</DataSource>
+									</AxFormControl>
+								</Controls>
+								<Breakable>No</Breakable>
+								<DataGroup>Email</DataGroup>
 								<DataSource>DEVIntegMessageTypeTableOutbound</DataSource>
 							</AxFormControl>
 						</Controls>

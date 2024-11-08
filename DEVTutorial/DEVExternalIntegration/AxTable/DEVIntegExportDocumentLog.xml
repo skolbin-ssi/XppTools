@@ -64,6 +64,7 @@ public class DEVIntegExportDocumentLog extends common
         this.ExportStatus     = DEVIntegExportStatus::ToSend;
         this.StatusChangeDate = DateTimeUtil::utcNow();
         this.SendMessageID    = '';
+        this.ProcessingAttempts = 0;
     }
 
 ]]></Source>
@@ -166,8 +167,39 @@ public class DEVIntegExportDocumentLog extends common
 
 ]]></Source>
 			</Method>
+			<Method>
+				<Name>generateFileName</Name>
+				<Source><![CDATA[
+    public str generateFileName(container _parmsStr, str _defaultName)
+    {
+        str                              fileName;
+        DEVIntegMessageTypeTableOutbound messageTypeTableOutbound = this.messageTypeTableOutbound();
+        int                              i;
+
+        if (messageTypeTableOutbound.FileName)
+        {
+            fileName = messageTypeTableOutbound.getFileName(utcDateTimeNull());
+            str parmVal;
+            for(i = 1; i <= conLen(_parmsStr); i++)
+            {
+                parmVal = conPeek(_parmsStr, i);
+
+                fileName = strReplace(fileName, '%' + int2Str(i), parmVal);
+            }
+        }
+        else
+        {
+            fileName =  _defaultName;
+        }
+
+        return fileName;
+    }
+
+]]></Source>
+			</Method>
 		</Methods>
 	</SourceCode>
+	<FormRef>DEVIntegExportDocumentLog</FormRef>
 	<Label>Document Log</Label>
 	<TableGroup>Group</TableGroup>
 	<TitleField1>DocumentId</TitleField1>
@@ -347,10 +379,28 @@ public class DEVIntegExportDocumentLog extends common
 					<DataField>RefRecId</DataField>
 				</AxTableFieldGroupField>
 				<AxTableFieldGroupField>
+					<DataField>DocumentId</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
 					<DataField>ClassName</DataField>
 				</AxTableFieldGroupField>
 				<AxTableFieldGroupField>
 					<DataField>MessageTypeIdOutbound</DataField>
+				</AxTableFieldGroupField>
+			</Fields>
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>DetailsTime</Name>
+			<Label>Time details</Label>
+			<Fields>
+				<AxTableFieldGroupField>
+					<DataField>StatusChangeDate</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>DurationInMilliseconds</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>ProcessingAttempts</DataField>
 				</AxTableFieldGroupField>
 			</Fields>
 		</AxTableFieldGroup>
@@ -452,6 +502,21 @@ public class DEVIntegExportDocumentLog extends common
 			<Name>MessageTypeIdOutbound</Name>
 			<ExtendedDataType>DEVIntegMessageTypeIdOutbound</ExtendedDataType>
 			<Mandatory>Yes</Mandatory>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldInt">
+			<Name>DurationInMilliseconds</Name>
+			<ExtendedDataType>DurationInMilliseconds</ExtendedDataType>
+			<HelpText>Duration of the last call(ms)</HelpText>
+			<IgnoreEDTRelation>Yes</IgnoreEDTRelation>
+			<Label>Duration(ms)</Label>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldInt">
+			<Name>ProcessingAttempts</Name>
+			<ExtendedDataType>PositiveNumber</ExtendedDataType>
+			<HelpText>Number of processing attempts</HelpText>
+			<Label>Processing attempts</Label>
 		</AxTableField>
 	</Fields>
 	<FullTextIndexes />

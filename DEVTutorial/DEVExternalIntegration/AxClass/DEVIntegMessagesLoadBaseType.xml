@@ -6,14 +6,27 @@
 class DEVIntegMessagesLoadBaseType
 {
     DEVIntegMessageTypeInbound						messageTypeTable;
+    DEVIntegMessageTypeTableOutbound                messageTypeTableOutbound;
 
     int  readMessageCount;
     int  currentTimeStart;
 
+    DEVIntegMessageProcessResult     processResults;
 
 }
 ]]></Declaration>
 		<Methods>
+			<Method>
+				<Name>parmProcessResults</Name>
+				<Source><![CDATA[
+    public DEVIntegMessageProcessResult parmProcessResults(DEVIntegMessageProcessResult _processResults = processResults)
+    {
+        processResults = _processResults;
+        return processResults;
+    }
+
+]]></Source>
+			</Method>
 			<Method>
 				<Name>parmMessageTypeTable</Name>
 				<Source><![CDATA[
@@ -21,6 +34,17 @@ class DEVIntegMessagesLoadBaseType
     {
         messageTypeTable = _messageTypeTable;
         return messageTypeTable;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>parmMessageTypeTableOutbound</Name>
+				<Source><![CDATA[
+    public DEVIntegMessageTypeTableOutbound parmMessageTypeTableOutbound(DEVIntegMessageTypeTableOutbound _messageTypeTableOutbound = messageTypeTableOutbound)
+    {
+        messageTypeTableOutbound = _messageTypeTableOutbound;
+        return messageTypeTableOutbound;
     }
 
 ]]></Source>
@@ -99,15 +123,74 @@ class DEVIntegMessagesLoadBaseType
 ]]></Source>
 			</Method>
 			<Method>
+				<Name>constructCustomLoadDelegate</Name>
+				<Source><![CDATA[
+    delegate void constructCustomLoadDelegate(DEVIntegMessageTypeInbound   _messageTypeTable, EventHandlerResult _result) { }
+
+]]></Source>
+			</Method>
+			<Method>
 				<Name>constructFromMessageType</Name>
 				<Source><![CDATA[
     static  DEVIntegMessagesLoadBaseType constructFromMessageType(DEVIntegMessageTypeInbound   _messageTypeTable)
     {
         DEVIntegMessagesLoadBaseType  shareClass;
-        ;
-        shareClass = DEVIntegMessagesLoadBaseType::constructFromConnectionType(_messageTypeTable.connectionType());
+        DEVIntegProcessMessageBase baseClass = _messageTypeTable.getActionClass();
 
+        if (baseClass)
+        {
+            shareClass = baseClass.getCustomLoadType();
+        }
+
+        if (! shareClass)
+        {
+            shareClass = DEVIntegMessagesLoadBaseType::constructFromConnectionType(_messageTypeTable.connectionType());
+        }
         shareClass.parmMessageTypeTable(_messageTypeTable);
+        return shareClass;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>constructCustomExportDelegate</Name>
+				<Source><![CDATA[
+    delegate void constructCustomExportDelegate(DEVIntegMessageTypeTableOutbound        _messageTypeTableOutbound, EventHandlerResult _result) { }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>constructFromMessageTypeOutbound</Name>
+				<Source><![CDATA[
+    static  DEVIntegMessagesLoadBaseType constructFromMessageTypeOutbound(DEVIntegMessageTypeTableOutbound        _messageTypeTableOutbound)
+    {
+        DEVIntegMessagesLoadBaseType  shareClass;
+        EventHandlerResult            eventHandlerResult = new EventHandlerResult();
+        DEVIntegMessagesLoadBaseType  delegeteCall       = new DEVIntegMessagesLoadBaseType();
+        ClassName                     className;
+
+        if (_messageTypeTableOutbound.IsFullExport == DEVIntegOutboundExportType::DocumentsOnEvents)
+        {
+            DEVIntegExportMessageBase baseAction = _messageTypeTableOutbound.getActionClass();
+            shareClass = baseAction.getCustomLoadType(_messageTypeTableOutbound);
+        }
+        if (! shareClass)
+        {
+            delegeteCall.constructCustomExportDelegate(_messageTypeTableOutbound, eventHandlerResult);
+
+            className = conPeek(eventHandlerResult.result(), 1);
+       
+            if (className)
+            {
+                shareClass = DictClass::createObject(className);
+            }
+
+            if (! shareClass)
+            {
+                shareClass = DEVIntegMessagesLoadBaseType::constructFromConnectionType(_messageTypeTableOutbound.connectionType());
+            }
+        }
+        shareClass.parmMessageTypeTableOutbound(_messageTypeTableOutbound);
         return shareClass;
     }
 
@@ -133,6 +216,26 @@ class DEVIntegMessagesLoadBaseType
                 break;
         }
         return shareClass;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>sendFile</Name>
+				<Source><![CDATA[
+    public void sendFile(FileName  _fileName, System.IO.MemoryStream  _fileDataStream)
+    {
+        throw error(Error::missingOverload(funcName()));
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>sendMessage</Name>
+				<Source><![CDATA[
+    public void sendMessage(str _request, str  _messageData)
+    {
+        throw error(Error::missingOverload(funcName()));
     }
 
 ]]></Source>

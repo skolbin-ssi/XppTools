@@ -2,9 +2,13 @@
 <AxSecurityRole xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
 	<Name>DEVIntegDeveloperRole</Name>
 	<Description>Integration developer may delete messages and documents</Description>
-	<Label>Integration developer</Label>
+	<Label>DEV Integration developer</Label>
 	<DirectAccessPermissions />
-	<Duties />
+	<Duties>
+		<AxSecurityDutyReference>
+			<Name>DEVIntegIntegrationAdminBase</Name>
+		</AxSecurityDutyReference>
+	</Duties>
 	<Privileges />
 	<SubRoles />
 </AxSecurityRole>

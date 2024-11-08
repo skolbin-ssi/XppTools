@@ -65,6 +65,40 @@ public class DEVIntegErrorLog extends common
 
 ]]></Source>
 			</Method>
+			<Method>
+				<Name>findForMessageTable</Name>
+				<Source><![CDATA[
+    public static DEVIntegErrorLog findForMessageTable(DEVIntegMessageRefRecId  _refRecId, RefTableId  _refTableId, boolean _forUpdate = false)
+    {
+        DEVIntegErrorLog    errorLog;
+
+        if (_refRecId && _refTableId)
+        {
+            errorLog.selectForUpdate(_forUpdate);
+        
+            select firstonly errorLog
+                where errorLog.MessageRefRecId ==  _refRecId  &&
+                      errorLog.MessageTableId  ==  _refTableId;
+        }
+
+        return errorLog;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>showLog</Name>
+				<Source><![CDATA[
+    public void showLog()
+    {
+        if (this.RecId)
+        {
+            infolog.import(this.InfologData);
+        }
+    }
+
+]]></Source>
+			</Method>
 		</Methods>
 	</SourceCode>
 	<Label>Integration errors</Label>
@@ -125,6 +159,9 @@ public class DEVIntegErrorLog extends common
 				</AxTableFieldGroupField>
 				<AxTableFieldGroupField>
 					<DataField>MessageRefRecId</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>MessageTableId</DataField>
 				</AxTableFieldGroupField>
 			</Fields>
 		</AxTableFieldGroup>
@@ -233,6 +270,28 @@ public class DEVIntegErrorLog extends common
 			<Cardinality>ZeroOne</Cardinality>
 			<OnDelete>Cascade</OnDelete>
 			<RelatedTable>DEVIntegExportBulkLog</RelatedTable>
+			<RelatedTableCardinality>ZeroOne</RelatedTableCardinality>
+			<RelationshipType>Association</RelationshipType>
+			<Constraints>
+				<AxTableRelationConstraint xmlns=""
+					i:type="AxTableRelationConstraintField">
+					<Name>MessageRefRecId</Name>
+					<Field>MessageRefRecId</Field>
+					<RelatedField>RecId</RelatedField>
+				</AxTableRelationConstraint>
+				<AxTableRelationConstraint xmlns=""
+					i:type="AxTableRelationConstraintField">
+					<Name>MessageTableId</Name>
+					<Field>MessageTableId</Field>
+					<RelatedField>TableId</RelatedField>
+				</AxTableRelationConstraint>
+			</Constraints>
+		</AxTableRelation>
+		<AxTableRelation>
+			<Name>DEVIntegServiceExportLog</Name>
+			<Cardinality>ZeroOne</Cardinality>
+			<OnDelete>Cascade</OnDelete>
+			<RelatedTable>DEVIntegServiceExportLog</RelatedTable>
 			<RelatedTableCardinality>ZeroOne</RelatedTableCardinality>
 			<RelationshipType>Association</RelationshipType>
 			<Constraints>

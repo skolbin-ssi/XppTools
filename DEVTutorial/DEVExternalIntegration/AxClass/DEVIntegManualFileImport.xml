@@ -13,15 +13,32 @@ class DEVIntegManualFileImport extends RunBaseBatch
     private const str OkButtonName    = 'OkButton';
     FileUploadTemporaryStorageResult    fileUploadResult;
 
-    #define.CurrentVersion(1)
+    DEVIntegMessageTable            messageTable;
+
+    DEVIntegMessageProcessTypeManual  messageProcessTypeManual;
+    DialogField                       dlgMessageProcessTypeManual;
+
+
+    #define.CurrentVersion(2)
     #localmacro.CurrentList
-        messageTypeId
+        messageTypeId,
+        messageProcessTypeManual
     #endmacro
 
 
 }
 ]]></Declaration>
 		<Methods>
+			<Method>
+				<Name>getMessageTable</Name>
+				<Source><![CDATA[
+    public DEVIntegMessageTable  getMessageTable()
+    {
+        return messageTable;
+    }
+
+]]></Source>
+			</Method>
 			<Method>
 				<Name>dialog</Name>
 				<Source><![CDATA[
@@ -47,6 +64,9 @@ class DEVIntegManualFileImport extends RunBaseBatch
         dlgMessageTypeId.registerOverrideMethod(methodStr(FormStringControl, modified),
             methodStr(DEVIntegManualFileImport, modifiedmessageTypeId),
             this);
+
+        dlgMessageProcessTypeManual  = dialog.addFieldValue(enumStr(DEVIntegMessageProcessTypeManual), MessageProcessTypeManual);
+        
         
         return dialog;
     }
@@ -123,11 +143,32 @@ class DEVIntegManualFileImport extends RunBaseBatch
 ]]></Source>
 			</Method>
 			<Method>
+				<Name>parmMessageProcessTypeManual</Name>
+				<Source><![CDATA[
+    public DEVIntegMessageProcessTypeManual parmMessageProcessTypeManual(DEVIntegMessageProcessTypeManual _MessageProcessTypeManual = MessageProcessTypeManual)
+    {
+        messageProcessTypeManual = _MessageProcessTypeManual;
+        return messageProcessTypeManual;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
 				<Name>getFormControl</Name>
 				<Source><![CDATA[
     protected FormControl getFormControl(DialogRunbase _dialog, str _controlName)
     {
         return _dialog.formRun().control(_dialog.formRun().controlId( _controlName));
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>initParmDefault</Name>
+				<Source><![CDATA[
+    public void initParmDefault()
+    {
+        messageProcessTypeManual = DEVIntegMessageProcessTypeManual::All;
     }
 
 ]]></Source>
@@ -141,6 +182,9 @@ class DEVIntegManualFileImport extends RunBaseBatch
         fileUploadResult = fileUploadControl.getFileUploadResult();
 
         messageTypeId        = dlgMessageTypeId.value();
+
+        messageProcessTypeManual   = dlgMessageProcessTypeManual.value();
+        
     
         return super();
     }
@@ -179,12 +223,23 @@ class DEVIntegManualFileImport extends RunBaseBatch
 ]]></Source>
 			</Method>
 			<Method>
+				<Name>createMessageTable</Name>
+				<Source><![CDATA[
+    protected void createMessageTable(DEVIntegMessageCreator  _messageCreator, DEVIntegMessageTypeInbound  _messageTypeTable)
+    {
+        messageTable = _messageCreator.createMessage(_messageTypeTable);
+    
+    }
+
+]]></Source>
+			</Method>
+			<Method>
 				<Name>run</Name>
 				<Source><![CDATA[
     public void run()
     {
         DEVIntegMessageTypeInbound        messageTypeTable;
-        DEVIntegMessageTable            messageTable;
+
         DEVIntegMessageCreator          messageCreator;
         DEVIntegMessageProcessor        messageProcessor;
         System.IO.MemoryStream          memoryStreamFile;
@@ -213,11 +268,30 @@ class DEVIntegManualFileImport extends RunBaseBatch
             messageCreator = DEVIntegMessageCreator::construct();
             messageCreator.initFromStreamLocalFile(fileName, folderName, memoryStreamFile);
             messageCreator.parmIsManualImport(true);
-            messageTable = messageCreator.createMessage(messageTypeTable);
 
-            //process message
-            messageProcessor = DEVIntegMessageProcessor::construct(messageTypeTable);
-            messageProcessor.processMessage(messageTable);
+            ttsbegin;
+
+            this.createMessageTable(messageCreator, messageTypeTable);
+
+            ttscommit;
+
+            if (messageProcessTypeManual != DEVIntegMessageProcessTypeManual::None)
+            {
+                //process main message
+                messageProcessor = DEVIntegMessageProcessor::construct(messageTypeTable);
+                messageProcessor.processMessage(messageTable);
+            }
+            if (messageProcessTypeManual == DEVIntegMessageProcessTypeManual::All)
+            {
+                DEVIntegMessageTable            messageTableChild;
+                while select messageTableChild
+                    where messageTableChild.ParentMessageId == messageTable.RecId &&
+                          messageTableChild.MessageTypeId   == messageTable.MessageTypeId
+                {
+                    messageProcessor = DEVIntegMessageProcessor::construct(messageTypeTable);
+                    messageProcessor.processMessage(messageTableChild);
+                }
+            }
         }
         catch(Exception::Error)
         {
@@ -237,10 +311,12 @@ class DEVIntegManualFileImport extends RunBaseBatch
 				<Source><![CDATA[
     public boolean unpack(container _packedClass)
     {
+        DEVIntegMessageTypeIdInbound      messageTypeIdOrig;
+
         Version    version = RunBase::getVersion(_packedClass);
         if (messageTypeId)
         {
-            return false;
+            messageTypeIdOrig = messageTypeId;
         }
         switch (version)
         {
@@ -250,6 +326,11 @@ class DEVIntegManualFileImport extends RunBaseBatch
             default:
                 return false;
         }
+        if (messageTypeIdOrig)
+        {
+            messageTypeId = messageTypeIdOrig;
+        }
+
         return true;
     }
 

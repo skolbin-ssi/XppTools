@@ -5,9 +5,12 @@
 		<Declaration><![CDATA[
 abstract public class DEVIntegProcessMessageBase
 {
-    DEVIntegMessageTypeInbound        messageTypeTable;
+    DEVIntegMessageTypeInbound      messageTypeTable;
     DEVIntegMessageTable            messageTable;
     DEVIntegMessageProcessResult    messageProcessResult;
+
+    RefRecId                        stagingRecIdToProcess;
+
 
 }
 ]]></Declaration>
@@ -85,6 +88,99 @@ abstract public class DEVIntegProcessMessageBase
     public void initParameters(DEVIntegMessageTypeInbound   _messageTypeTable)
     {
         messageTypeTable = _messageTypeTable;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>parmStagingRecIdToProcess</Name>
+				<Source><![CDATA[
+    public RefRecId parmStagingRecIdToProcess(RefRecId _stagingRecIdToProcess = stagingRecIdToProcess)
+    {
+        stagingRecIdToProcess = _stagingRecIdToProcess;
+        return stagingRecIdToProcess;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>getCustomLoadType</Name>
+				<Source><![CDATA[
+    public DEVIntegMessagesLoadBaseType getCustomLoadType()
+    {
+        return null;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>getVisibleInboundMessageFields</Name>
+				<Source><![CDATA[
+    public container getVisibleInboundMessageFields()
+    {
+        container c = connull();
+
+        return c;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>deleteChildMessages</Name>
+				<Source><![CDATA[
+    public void deleteChildMessages()
+    {
+        DEVIntegMessageTable            messageTableChild;
+
+        ttsbegin;
+        DEV::validateCursorIsNotEmpty(messageTable);
+
+        while select messageTableChild
+                where messageTableChild.ParentMessageId == messageTable.RecId &&
+                      messageTableChild.MessageTypeId   == messageTable.MessageTypeId
+        {
+            if (messageTableChild.Status == DEVIntegMessageStatus::Processed)
+            {
+                throw error(strFmt("Message has a child message %1, %2 in the %3 status",
+                                messageTableChild.RecId, messageTableChild.Name, messageTableChild.Status));
+            }
+            else
+            {
+                DEV::validateDeleteRecordCheck(messageTableChild);
+                messageTableChild.delete();
+            }
+        }
+        ttscommit;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>initChildMessage</Name>
+				<Source><![CDATA[
+    public DEVIntegMessageTable initChildMessage(boolean _doInsert = false)
+    {
+        DEVIntegMessageTable            messageTableChild;
+        ;
+        messageTableChild.MessageTypeId       = messageTable.MessageTypeId;
+        messageTableChild.CompanyId           = messageTable.CompanyId;
+        messageTableChild.Path                = messageTable.Path;
+        messageTableChild.DocumentDescription = messageTable.DocumentDescription;
+        messageTableChild.ServBusLabel      = messageTable.ServBusLabel;
+        messageTableChild.IsManualUpload    = messageTable.IsManualUpload;
+        messageTableChild.ParentMessageId   = messageTable.RecId;
+        messageTableChild.Name              = messageTable.Name;
+        
+        messageTableChild.Status    = DEVIntegMessageStatus::Ready;
+        messageTableChild.IsParsed  = true;
+
+        if (_doInsert)
+        {
+            DEV::validateWriteRecordCheck(messageTableChild);
+            messageTableChild.insert();
+        }
+
+        return messageTableChild;
     }
 
 ]]></Source>

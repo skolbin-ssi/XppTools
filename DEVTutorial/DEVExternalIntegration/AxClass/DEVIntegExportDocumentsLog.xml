@@ -15,6 +15,9 @@ class DEVIntegExportDocumentsLog extends RunBaseBatch
     DEVIntegMessagesLoadAzureServiceBus     loadAzureServiceBusCache;
     str                                     loadAzureServiceBusCacheKey;
 
+    DEVIntegMessagesLoadBaseType     loadMessagesFileTypeCache;
+    str                              loadMessagesFileTypeCacheKey;
+
     #define.CurrentVersion(1)
     #localmacro.CurrentList
         dummy
@@ -147,6 +150,13 @@ class DEVIntegExportDocumentsLog extends RunBaseBatch
         RefRecId                     refRecIf;
         str                          loadAzureServiceBusCacheKeyLocal;
         CompanyId                    companyId;
+        boolean                     isErrorCaught;
+        Exception                   exception = Exception::Info;
+        int                         infoCnt ;
+        DEVIntegMessageProcessResult  processResults = DEVIntegMessageProcessResult::construct();
+        
+        System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
+        stopwatch.Start();
 
         companyId = _exportDocumentLog.CompanyId;
         if (! xDataArea::exist(companyId))
@@ -156,32 +166,139 @@ class DEVIntegExportDocumentsLog extends RunBaseBatch
         changecompany(companyId)
         {
             exportMessageBase = _messageTypeTableOutbound.getActionClass();
-            exportMessageBase.parmMessageTypeTableOutbound(_messageTypeTableOutbound);
+            exportMessageBase.parmProcessResults(processResults);
             
-            ttsBegin;
-            if (_messageTypeTableOutbound.connectionType().ConnectionTypeResource == DEVIntegConnectionTypeResource::AzureServiceBus)
+            infoCnt = infologLine();
+            try
             {
-                loadAzureServiceBusCacheKeyLocal = strFmt('%1,%2', _messageTypeTableOutbound.ConnectionTypeId, _messageTypeTableOutbound.ServiceBusQueueName);
-
-                if (! loadAzureServiceBusCache || loadAzureServiceBusCacheKeyLocal != loadAzureServiceBusCacheKey)
+                ttsBegin;
+                if (_messageTypeTableOutbound.connectionType().ConnectionTypeResource == DEVIntegConnectionTypeResource::AzureServiceBus)
                 {
-                    loadAzureServiceBusCache = DEVIntegMessagesLoadAzureServiceBus::constructFromOutboundMessage(_messageTypeTableOutbound);
-                    loadAzureServiceBusCacheKey = loadAzureServiceBusCacheKeyLocal;
+                    loadAzureServiceBusCacheKeyLocal = strFmt('%1,%2', _messageTypeTableOutbound.ConnectionTypeId, _messageTypeTableOutbound.ServiceBusQueueName);
+
+                    if (! loadAzureServiceBusCache || loadAzureServiceBusCacheKeyLocal != loadAzureServiceBusCacheKey)
+                    {
+                        loadAzureServiceBusCache = DEVIntegMessagesLoadAzureServiceBus::constructFromOutboundMessage(_messageTypeTableOutbound);
+                        loadAzureServiceBusCacheKey = loadAzureServiceBusCacheKeyLocal;
+                    }
+                    exportMessageBase.exportServiceBusMessage(_exportDocumentLog, loadAzureServiceBusCache);
+                } 
+                else
+                {
+                    if (_messageTypeTableOutbound.connectionType().isFileBasedType())
+                    {
+                        loadAzureServiceBusCacheKeyLocal = strFmt('%1,%2', _messageTypeTableOutbound.ConnectionTypeId, _messageTypeTableOutbound.OutputFolder);
+
+                        if (! loadMessagesFileTypeCache || loadAzureServiceBusCacheKeyLocal != loadMessagesFileTypeCacheKey)
+                        {
+                            loadMessagesFileTypeCache = DEVIntegMessagesLoadBaseType::constructFromMessageTypeOutbound(_messageTypeTableOutbound);
+                            loadMessagesFileTypeCacheKey = loadAzureServiceBusCacheKeyLocal;
+                        }
+                        exportMessageBase.exportFileMessage(_exportDocumentLog, loadMessagesFileTypeCache);
+                    }
+                    else
+                    if (_messageTypeTableOutbound.connectionType().ConnectionTypeResource == DEVIntegConnectionTypeResource::Web)
+                    {
+                        loadAzureServiceBusCacheKeyLocal = strFmt('%1,%2', _messageTypeTableOutbound.ConnectionTypeId, _messageTypeTableOutbound.ClassName);
+
+                        if (! loadMessagesFileTypeCache || loadAzureServiceBusCacheKeyLocal != loadMessagesFileTypeCacheKey)
+                        {
+                            loadMessagesFileTypeCache = DEVIntegMessagesLoadBaseType::constructFromMessageTypeOutbound(_messageTypeTableOutbound);
+                            loadMessagesFileTypeCacheKey = loadAzureServiceBusCacheKeyLocal;
+                        }
+                        loadMessagesFileTypeCache.parmProcessResults(processResults);
+                        exportMessageBase.exportWebMessage(_exportDocumentLog, loadMessagesFileTypeCache);
+                    }
                 }
-                exportMessageBase.exportServiceBusMessage(_exportDocumentLog, loadAzureServiceBusCache);
-            }
     
-            refRecIf = _exportDocumentLog.recVersion;
-            exportDocumentLogUpd = DEVIntegExportDocumentLog::findRecId(_exportDocumentLog.RecId, true);
-            if (exportDocumentLogUpd.RecId && exportDocumentLogUpd.recVersion == refRecIf)
+                refRecIf = _exportDocumentLog.recVersion;
+                exportDocumentLogUpd = DEVIntegExportDocumentLog::findRecId(_exportDocumentLog.RecId, true);
+                if (exportDocumentLogUpd.RecId && exportDocumentLogUpd.StatusChangeDate == _exportDocumentLog.StatusChangeDate)
+                {
+                    stopwatch.Stop();
+
+                    exportDocumentLogUpd.ExportStatus           = DEVIntegExportStatus::Sent;
+                    exportDocumentLogUpd.StatusChangeDate       = DateTimeUtil::utcNow();
+                    exportDocumentLogUpd.DurationInMilliseconds = any2Int(stopwatch.get_ElapsedMilliseconds());
+                    exportDocumentLogUpd.update();
+
+                    if (_messageTypeTableOutbound.OutboundLogType == DEVIntegOutboundLogType::Full)
+                    {
+                        DEVIntegMessageDataOutbound::insertLog(exportDocumentLogUpd, exception, processResults);
+                    }
+                }
+    
+                ttsCommit;
+            }
+            catch (Exception::Deadlock)
             {
-                exportDocumentLogUpd.ExportStatus     = DEVIntegExportStatus::Sent;
-                exportDocumentLogUpd.StatusChangeDate = DateTimeUtil::utcNow();
-                exportDocumentLogUpd.update();
+                isErrorCaught   = true;
+                exception       = Exception::Deadlock;
             }
-    
-            ttsCommit;
+            catch (Exception::Error)
+            {
+                isErrorCaught   = true;
+                exception       = Exception::Error;
+            }
+            catch (Exception::UpdateConflict)
+            {
+                if (appl.ttsLevel() == 0)
+                {
+                    isErrorCaught   = true;
+                    exception       = Exception::UpdateConflict;
+                }
+                else
+                {
+                    throw Exception::UpdateConflict;
+                }
+            }
+            catch (Exception::UpdateConflictNotRecovered)
+            {
+                isErrorCaught   = true;
+                exception       = Exception::UpdateConflictNotRecovered;
+            }
+            catch(Exception::CLRError)
+            {
+                error(AifUtil::getClrErrorMessage());
+                isErrorCaught   = true;
+                exception       = Exception::CLRError;
+            }
+            catch
+            {
+                isErrorCaught   = true;
+                exception       = Exception::Error;
+            }
+
+            if (isErrorCaught)
+            {
+                if (processResults && processResults.parmProcessPrefix())
+                {
+                    error(processResults.parmProcessPrefix());
+                }
+
+                ttsbegin;
+                DEVIntegMessageDataOutbound::insertLog(_exportDocumentLog, exception, processResults, infoCnt);
+
+                exportDocumentLogUpd = DEVIntegExportDocumentLog::findRecId(_exportDocumentLog.RecId, true);
+                if (exportDocumentLogUpd.RecId)
+                {
+                    exportDocumentLogUpd.ProcessingAttempts++;
+                    exportDocumentLogUpd.update();
+                }
+
+                ttscommit;
+
+                if (exportMessageBase && ! exportMessageBase.failOnFirstError())
+                {
+                    warning(strFmt("Failed to export %1, document: %2", _messageTypeTableOutbound.MessageTypeIdOutbound, _exportDocumentLog.DocumentId));
+                }
+                else
+                {
+                    throw error(strFmt("Failed to export %1, document: %2", _messageTypeTableOutbound.MessageTypeIdOutbound, _exportDocumentLog.DocumentId));
+                }
+            } 
         }
+
     }
 
 ]]></Source>
@@ -349,7 +466,7 @@ class DEVIntegExportDocumentsLog extends RunBaseBatch
     {
         ;
     
-        return "Export messages from log";
+        return "Export documents from log";
     }
 
 ]]></Source>
@@ -377,6 +494,48 @@ class DEVIntegExportDocumentsLog extends RunBaseBatch
     
         info(strfmt("%1 record(s) processed", processedCounter));
     
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>exportRecordList</Name>
+				<Source><![CDATA[
+    static void exportRecordList(DEVIntegExportRecordList   _integExportRecordList)
+    {
+        DEVIntegExportDocumentLog     exportDocumentLog;
+        DEVIntegExportDocumentsLog    integExportDocumentLog = DEVIntegExportDocumentsLog::construct();
+        int                           processedCounter;
+        container                     selectedRecords;
+        int                           i;
+        RefRecId                      refRecId;
+        ;
+        if (_integExportRecordList)
+        {
+            try
+            {
+                selectedRecords = _integExportRecordList.getExportLogRecIdCon();
+                for (i = 1; i <= conlen(selectedRecords); i++)
+                {
+                    refRecId = conpeek(selectedRecords, i);
+                    exportDocumentLog = DEVIntegExportDocumentLog::findRecId(refRecId);
+                    if (exportDocumentLog.RecId &&
+                        exportDocumentLog.ExportStatus == DEVIntegExportStatus::ToSend)
+                    {
+                        integExportDocumentLog.processExportDocumentLog(exportDocumentLog, exportDocumentLog.messageTypeTableOutbound());
+                        processedCounter++;
+                    }
+                }
+            }
+            catch(Exception::Error)
+            {
+                error(strFmt("Export document %1 failed(ref %2)", exportDocumentLog.DocumentId, refRecId));
+            }
+            catch(Exception::CLRError)
+            {
+                error(AifUtil::getClrErrorMessage());
+            }
+        }
     }
 
 ]]></Source>

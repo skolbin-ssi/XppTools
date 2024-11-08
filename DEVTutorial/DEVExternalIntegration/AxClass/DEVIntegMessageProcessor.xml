@@ -29,7 +29,6 @@ public class DEVIntegMessageProcessor
     void createMessageClass()
     {
         processMessageBase = messageTypeTable.getActionClass();
-        processMessageBase.initParameters(messageTypeTable);
     }
 
 ]]></Source>
@@ -69,8 +68,9 @@ public class DEVIntegMessageProcessor
             
         if (messageTableUpd.RecVersion == _messageTable.RecVersion )
         {
-            if (messageTableUpd.Status      == DEVIntegMessageStatus::Ready ||
-                messageTableUpd.Status      == DEVIntegMessageStatus::Error  || 
+            if (messageTableUpd.Status      == DEVIntegMessageStatus::Ready    ||
+                messageTableUpd.Status      == DEVIntegMessageStatus::Error    || 
+                messageTableUpd.Status      == DEVIntegMessageStatus::Warning  ||
                 messageTableUpd.Status      == DEVIntegMessageStatus::Cancelled  ||
                (messageTableUpd.Status      == DEVIntegMessageStatus::Processing && (
                  messageTableUpd.isBlockedByCurrentSession() || ! messageTableUpd.isSessionActive())) )
@@ -137,11 +137,6 @@ public class DEVIntegMessageProcessor
             isErrorCaught   = true;
             exception       = Exception::Internal;
         }
-        catch (Exception::Break)
-        {
-            isErrorCaught   = true;
-            exception       = Exception::Break;
-        }
         catch (Exception::DDEerror)
         {
             isErrorCaught   = true;
@@ -188,7 +183,14 @@ public class DEVIntegMessageProcessor
             {
                 error(processResults.parmProcessPrefix());
             }
-            curMessageStatus = DEVIntegMessageStatus::Error;
+            if (processResults.isMessageStatusSet())
+            {
+                curMessageStatus = processResults.messageStatusExternal();
+            }
+            else
+            {
+                curMessageStatus = DEVIntegMessageStatus::Error;
+            }
         }
         
 
@@ -210,6 +212,78 @@ public class DEVIntegMessageProcessor
             DEVIntegErrorLog::insertErrorByMessage(messageTableUpd, infoCnt, exception);
         }
         ttscommit;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>processSingleMessage</Name>
+				<Source><![CDATA[
+    static void processSingleMessage(DEVIntegMessageTable   _messageTable)
+    {
+        DEVIntegMessageProcessor messageProcessor = DEVIntegMessageProcessor::construct(_messageTable.messageTypeTable());
+        messageProcessor.processMessage(_messageTable);
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>processMessageFromForm</Name>
+				<Source><![CDATA[
+    static void processMessageFromForm(DEVIntegMessageTable   _messageTable)
+    {
+        DEVIntegMessageTable        integMessageTableLocal, integMessageTableUpd;
+        FormDataSource              DEVIntegMessageTable_ds;
+        int                         numOfMessages;
+        ;
+        DEVIntegMessageTable_ds = FormDataUtil::getFormDataSource(_messageTable);
+        if (DEVIntegMessageTable_ds)
+        {
+            try
+            {
+                for(integMessageTableLocal = DEVIntegMessageTable_ds.getFirst(true) ? DEVIntegMessageTable_ds.getFirst(true) : DEVIntegMessageTable_ds.cursor();
+                integMessageTableLocal.RecId;
+                integMessageTableLocal = DEVIntegMessageTable_ds.getNext())
+                {
+                    integMessageTableUpd = DEVIntegMessageTable::findRecId(integMessageTableLocal.RecId);
+
+                    DEVIntegMessageProcessor messageProcessor = DEVIntegMessageProcessor::construct(integMessageTableUpd.messageTypeTable());
+                    messageProcessor.processMessage(integMessageTableUpd);
+
+                    numOfMessages++;
+                    //integMessageTableLocal.reread();
+                    //DEVIntegMessageTable_ds.re
+                    //DEV::dsRefresh(integMessageTableLocal);
+                    //DEVIntegMessageTable_ds.reread();
+                    //DEVIntegMessageTable_ds.refresh();
+                }
+            }
+            finally
+            {
+                if (numOfMessages > 1)
+                {
+                    DEV::dsResearch(_messageTable);
+                }
+                else
+                {
+                    DEV::dsRefresh(_messageTable);
+                }
+            }
+
+        }
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>processSingleLine</Name>
+				<Source><![CDATA[
+    public void processSingleLine(DEVIntegMessageTable   _messageTable, RefRecId   _stagingRecIdToProcess)
+    {
+        DEVIntegMessageProcessResult  processResults;
+        processResults = DEVIntegMessageProcessResult::construct();
+        processMessageBase.parmStagingRecIdToProcess(_stagingRecIdToProcess);
+        processMessageBase.processMessage(_messageTable, processResults);
     }
 
 ]]></Source>

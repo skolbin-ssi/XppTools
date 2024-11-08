@@ -7,9 +7,24 @@ class DEVIntegExportMessageBase
 {
     DEVIntegMessageTypeTableOutbound messageTypeTableOutbound;
 
+    DEVIntegExportRecordList         integExportRecordList;
+
+    DEVIntegMessageProcessResult     processResults;
+
 }
 ]]></Declaration>
 		<Methods>
+			<Method>
+				<Name>parmProcessResults</Name>
+				<Source><![CDATA[
+    public DEVIntegMessageProcessResult parmProcessResults(DEVIntegMessageProcessResult _processResults = processResults)
+    {
+        processResults = _processResults;
+        return processResults;
+    }
+
+]]></Source>
+			</Method>
 			<Method>
 				<Name>exportClassName</Name>
 				<Source><![CDATA[
@@ -26,6 +41,18 @@ class DEVIntegExportMessageBase
     public str getDescription()
     {
         return '';
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>failOnFirstError</Name>
+				<Source><![CDATA[
+    public boolean failOnFirstError()
+    {
+        boolean res;
+        res = messageTypeTableOutbound.connectionType().ConnectionTypeResource != DEVIntegConnectionTypeResource::Web;
+        return res;
     }
 
 ]]></Source>
@@ -106,8 +133,24 @@ class DEVIntegExportMessageBase
             exportDocumentLog.setToSend();
             exportDocumentLog.update();
         }
-    
+        if (integExportRecordList)
+        {
+            integExportRecordList.addExportLog(exportDocumentLog.RecId);
+        }
         ttsCommit;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>parmIntegExportRecordList</Name>
+				<Source><![CDATA[
+    public DEVIntegExportRecordList parmIntegExportRecordList(DEVIntegExportRecordList _integExportRecordList = integExportRecordList)
+    {
+        ;
+        integExportRecordList = _integExportRecordList;
+
+        return integExportRecordList;
     }
 
 ]]></Source>
@@ -138,6 +181,100 @@ class DEVIntegExportMessageBase
     public void exportServiceBusMessage(DEVIntegExportDocumentLog    _exportDocumentLog, DEVIntegMessagesLoadAzureServiceBus     loadAzureServiceBusCache)
     {
         throw error(Error::missingOverload(funcName()));
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>exportFileMessage</Name>
+				<Source><![CDATA[
+    public void exportFileMessage(DEVIntegExportDocumentLog    _exportDocumentLog, DEVIntegMessagesLoadBaseType     _loadFileStorageCache)
+    {
+        throw error(Error::missingOverload(funcName()));
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>exportWebMessage</Name>
+				<Source><![CDATA[
+    public void exportWebMessage(DEVIntegExportDocumentLog    _exportDocumentLog, DEVIntegMessagesLoadBaseType     _loadFileStorageCache)
+    {
+        throw error(Error::missingOverload(funcName()));
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>getCustomLoadType</Name>
+				<Source><![CDATA[
+    //should be extended from DEVIntegMessagesLoadBaseType
+    public DEVIntegMessagesLoadBaseType getCustomLoadType(DEVIntegMessageTypeTableOutbound        _messageTypeTableOutbound)
+    {
+        return null;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>setManualTestButton</Name>
+				<Source><![CDATA[
+    public void setManualTestButton(FormFunctionButtonControl  _manualTestButtonControl)
+    {
+        _manualTestButtonControl.visible(false);
+        //_manualTestButtonControl.menuItemName(menuItemDisplayStr(DEVIntegTutorialLedgerJourHeaderStaging));
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>viewDocumentButtonClicked</Name>
+				<Source><![CDATA[
+    public void viewDocumentButtonClicked(DEVIntegExportDocumentLog _exportDocumentLog)
+    {
+        //FormUtility::openMenuItemForm(menuItemDisplayStr(..))
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>sendWebMessage</Name>
+				<Source><![CDATA[
+    public void sendWebMessage(DEVIntegExportDocumentLog    _exportDocumentLog,
+                               DEVIntegMessagesLoadBaseType _loadFileStorageCache,
+                               str                          _request,
+                               str                          _messageData)
+    {
+        _loadFileStorageCache.sendMessage(_request, _messageData);
+        
+        if (messageTypeTableOutbound.OutboundLogType == DEVIntegOutboundLogType::Full && _exportDocumentLog.RecId)
+        {
+            DEVIntegMessageDataOutbound  messageDataOutbound;
+
+            messageDataOutbound.ExportLogRefRecId = _exportDocumentLog.RecId;
+            messageDataOutbound.FileDataStr       = _messageData;
+            messageDataOutbound.insert();
+        }
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>sendMessageFileStorageCache</Name>
+				<Source><![CDATA[
+    public void sendMessageFileStorageCache(DEVIntegExportDocumentLog        _exportDocumentLog,
+                                            DEVIntegMessagesLoadBaseType     _loadFileStorageCache,
+                                            FileName  _fileName, System.IO.MemoryStream  _fileDataStream)
+    {
+        _loadFileStorageCache.sendFile(_fileName,  _fileDataStream);
+        if (messageTypeTableOutbound.OutboundLogType == DEVIntegOutboundLogType::Full && _exportDocumentLog.RecId)
+        {
+            DEVIntegMessageDataOutbound  messageDataOutbound;
+
+            messageDataOutbound.ExportLogRefRecId = _exportDocumentLog.RecId;
+            messageDataOutbound.FileDataStr       = _fileName;
+            messageDataOutbound.insert();
+        }
     }
 
 ]]></Source>

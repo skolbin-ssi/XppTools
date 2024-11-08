@@ -158,6 +158,52 @@ public class DEVIntegConnectionType extends common
 
 ]]></Source>
 			</Method>
+			<Method>
+				<Name>isFileBasedType</Name>
+				<Source><![CDATA[
+    public boolean isFileBasedType()
+    {
+        boolean res;
+        if (this.ConnectionTypeResource == DEVIntegConnectionTypeResource::AzureFileShare ||
+            this.ConnectionTypeResource == DEVIntegConnectionTypeResource::SFTP)
+        {
+            res = true;
+        }
+        return res;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>getWebHostNoSlash</Name>
+				<Source><![CDATA[
+    public str getWebHostNoSlash()
+    {
+        str res = this.FTPHostName;
+
+        if (res)
+        {
+            if (substr(res, strLen(res), 1) == '/')
+            {
+                res = subStr(res, 1, strLen(res) - 1);
+            }
+        }
+        return res; 
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>initValue</Name>
+				<Source><![CDATA[
+    public void initValue()
+    {
+        super();
+        this.TimeoutInSec = 10;
+    }
+
+]]></Source>
+			</Method>
 		</Methods>
 	</SourceCode>
 	<Label>Connection Types</Label>
@@ -270,6 +316,33 @@ public class DEVIntegConnectionType extends common
 				</AxTableFieldGroupField>
 			</Fields>
 		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>Web</Name>
+			<Label>Web</Label>
+			<Fields>
+				<AxTableFieldGroupField>
+					<DataField>FTPHostName</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>FTPUserName</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>ConnectionStringSource</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>FTPPassword</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>KeyVaultName</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>FTPPasswordSecretEdit</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>TimeoutInSec</DataField>
+				</AxTableFieldGroupField>
+			</Fields>
+		</AxTableFieldGroup>
 	</FieldGroups>
 	<Fields>
 		<AxTableField xmlns=""
@@ -310,8 +383,9 @@ public class DEVIntegConnectionType extends common
 		<AxTableField xmlns=""
 			i:type="AxTableFieldString">
 			<Name>FTPHostName</Name>
-			<ExtendedDataType>Name</ExtendedDataType>
+			<ExtendedDataType>DEVIntegAzureConnectionString</ExtendedDataType>
 			<HelpText>FTP Host name</HelpText>
+			<IgnoreEDTRelation>Yes</IgnoreEDTRelation>
 			<Label>Host name</Label>
 		</AxTableField>
 		<AxTableField xmlns=""
@@ -325,7 +399,7 @@ public class DEVIntegConnectionType extends common
 			i:type="AxTableFieldString">
 			<Name>FTPPassword</Name>
 			<ExtendedDataType>DEVIntegAzureConnectionString</ExtendedDataType>
-			<HelpText>FTP Password</HelpText>
+			<HelpText>Resource Password</HelpText>
 			<Label>Password</Label>
 		</AxTableField>
 		<AxTableField xmlns=""
@@ -334,6 +408,13 @@ public class DEVIntegConnectionType extends common
 			<ExtendedDataType>PositiveNumber</ExtendedDataType>
 			<HelpText>FTP Port</HelpText>
 			<Label>Port</Label>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldInt">
+			<Name>TimeoutInSec</Name>
+			<ExtendedDataType>RetailTimeoutInSec</ExtendedDataType>
+			<IgnoreEDTRelation>Yes</IgnoreEDTRelation>
+			<Label>Timeout(Sec)</Label>
 		</AxTableField>
 	</Fields>
 	<FullTextIndexes />
