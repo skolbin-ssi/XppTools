@@ -413,6 +413,12 @@ public class DEVIntegMessageTypeInbound extends common
 					<DataField>LastLoadDateTime</DataField>
 				</AxTableFieldGroupField>
 				<AxTableFieldGroupField>
+					<DataField>LastLoadOffset</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>LastLoadLimit</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
 					<DataField>LastLoadOverlapSec</DataField>
 				</AxTableFieldGroupField>
 				<AxTableFieldGroupField>
@@ -420,6 +426,15 @@ public class DEVIntegMessageTypeInbound extends common
 				</AxTableFieldGroupField>
 				<AxTableFieldGroupField>
 					<DataField>IsIgnoreFirstMessageProcessOnLoad</DataField>
+				</AxTableFieldGroupField>
+			</Fields>
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>AIConnection</Name>
+			<Label>AI connection</Label>
+			<Fields>
+				<AxTableFieldGroupField>
+					<DataField>AIPromptDefinitionId</DataField>
 				</AxTableFieldGroupField>
 			</Fields>
 		</AxTableFieldGroup>
@@ -455,22 +470,25 @@ public class DEVIntegMessageTypeInbound extends common
 		<AxTableField xmlns=""
 			i:type="AxTableFieldString">
 			<Name>ReadLocation</Name>
-			<ExtendedDataType>FolderName</ExtendedDataType>
+			<ExtendedDataType>DEVIntegFolderName</ExtendedDataType>
 			<HelpText>Read location folder(e.g. ParentDir\ChildDir)</HelpText>
+			<IgnoreEDTRelation>Yes</IgnoreEDTRelation>
 			<Label>Read location</Label>
 		</AxTableField>
 		<AxTableField xmlns=""
 			i:type="AxTableFieldString">
 			<Name>ArchiveLocation</Name>
-			<ExtendedDataType>FolderName</ExtendedDataType>
+			<ExtendedDataType>DEVIntegFolderName</ExtendedDataType>
 			<HelpText>Archive location path</HelpText>
+			<IgnoreEDTRelation>Yes</IgnoreEDTRelation>
 			<Label>Archive location</Label>
 		</AxTableField>
 		<AxTableField xmlns=""
 			i:type="AxTableFieldString">
 			<Name>AzureShareReference</Name>
-			<ExtendedDataType>FolderName</ExtendedDataType>
+			<ExtendedDataType>DEVIntegFolderName</ExtendedDataType>
 			<HelpText>Share reference for Azure storage</HelpText>
+			<IgnoreEDTRelation>Yes</IgnoreEDTRelation>
 			<Label>Share reference</Label>
 		</AxTableField>
 		<AxTableField xmlns=""
@@ -556,6 +574,27 @@ public class DEVIntegMessageTypeInbound extends common
 			<Label>Do not process on load</Label>
 			<EnumType>NoYes</EnumType>
 		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldInt">
+			<Name>LastLoadOffset</Name>
+			<ExtendedDataType>PositiveNumber</ExtendedDataType>
+			<HelpText>Offset parameter for the current date</HelpText>
+			<IgnoreEDTRelation>Yes</IgnoreEDTRelation>
+			<Label>Offset</Label>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldInt">
+			<Name>LastLoadLimit</Name>
+			<ExtendedDataType>PositiveNumber</ExtendedDataType>
+			<HelpText>Limit parameter for web service call</HelpText>
+			<IgnoreEDTRelation>Yes</IgnoreEDTRelation>
+			<Label>Limit</Label>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldString">
+			<Name>AIPromptDefinitionId</Name>
+			<ExtendedDataType>DEVIntegAIPromptDefinitionId</ExtendedDataType>
+		</AxTableField>
 	</Fields>
 	<FullTextIndexes />
 	<Indexes>
@@ -603,6 +642,24 @@ public class DEVIntegMessageTypeInbound extends common
 					<Name>ParmDMFEntityRecId</Name>
 					<Field>ParmDMFEntityRecId</Field>
 					<RelatedField>RecId</RelatedField>
+				</AxTableRelationConstraint>
+			</Constraints>
+		</AxTableRelation>
+		<AxTableRelation xmlns=""
+			i:type="AxTableRelationForeignKey">
+			<Name>DEVIntegAIPromptDefinition</Name>
+			<Cardinality>ZeroMore</Cardinality>
+			<OnDelete>Restricted</OnDelete>
+			<RelatedTable>DEVIntegAIPromptDefinition</RelatedTable>
+			<RelatedTableCardinality>ZeroOne</RelatedTableCardinality>
+			<RelationshipType>Association</RelationshipType>
+			<Constraints>
+				<AxTableRelationConstraint xmlns=""
+					i:type="AxTableRelationConstraintField">
+					<Name>AIPromptDefinitionId</Name>
+					<SourceEDT>DEVIntegAIPromptDefinitionId</SourceEDT>
+					<Field>AIPromptDefinitionId</Field>
+					<RelatedField>PromptDefinitionId</RelatedField>
 				</AxTableRelationConstraint>
 			</Constraints>
 		</AxTableRelation>

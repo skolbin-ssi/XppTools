@@ -7,18 +7,35 @@ using Newtonsoft.Json.Linq;
 class DEVIntegJObject
 {
     public Newtonsoft.Json.Linq.JObject body;
+
+    public str currentArrayName;
+    public JToken currentArrayElement;
    
 }
 ]]></Declaration>
 		<Methods>
 			<Method>
-				<Name>Parse</Name>
+				<Name>parse</Name>
 				<Source><![CDATA[
-    public static DEVIntegJObject Parse(str _body)
+    public static DEVIntegJObject parse(str _body)
     {
         DEVIntegJObject jo = new DEVIntegJObject();
         
         jo.body = JObject::Parse(_body);
+        
+        return jo;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>parseToken</Name>
+				<Source><![CDATA[
+    public static DEVIntegJObject parseToken(JToken _body)
+    {
+        DEVIntegJObject jo = new DEVIntegJObject();
+        
+        jo.body = _body;
         
         return jo;
     }
@@ -40,9 +57,9 @@ class DEVIntegJObject
 ]]></Source>
 			</Method>
 			<Method>
-				<Name>Create</Name>
+				<Name>create</Name>
 				<Source><![CDATA[
-    public static DEVIntegJObject Create(JObject _body)
+    public static DEVIntegJObject create(JObject _body)
     {
         DEVIntegJObject jo = new DEVIntegJObject();
         
@@ -54,9 +71,9 @@ class DEVIntegJObject
 ]]></Source>
 			</Method>
 			<Method>
-				<Name>GetValueString</Name>
+				<Name>getValueString</Name>
 				<Source><![CDATA[
-    public str GetValueString(str _propertyName)
+    public str getValueString(str _propertyName)
     {
         try
         {
@@ -83,9 +100,46 @@ class DEVIntegJObject
 ]]></Source>
 			</Method>
 			<Method>
-				<Name>GetValueInt64</Name>
+				<Name>getValueEnum</Name>
 				<Source><![CDATA[
-    public int64 GetValueInt64(str _propertyName)
+    public int getValueEnum(str _propertyName, EnumId _enumId)
+    {
+        JToken jToken = this.body.GetValue(_propertyName);
+        str    typeString;
+        int         res;
+        DictEnum    dictEnum ;
+        const int   EnumValueNotFound = 255;
+            
+        if (jToken == null || jToken.Type == JTokenType::Null)
+        {
+            typeString = "";
+        }
+        else
+        {
+            typeString = jToken.ToString();
+        }
+        
+        dictEnum    = new DictEnum(_enumId);
+        res = DMFEntityBase::string2Enum(typeString, _enumId);
+        if (res && !dictEnum.value2Symbol(res))
+        {
+            res = EnumValueNotFound;
+        }
+        if (res == EnumValueNotFound)
+        {
+            throw error(strFmt("Enum %1 does not contain value '%2'(JSON Property Name: %3)",
+                dictEnum.name(), typeString, _propertyName));
+        }
+       
+        return res;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>getValueInt64</Name>
+				<Source><![CDATA[
+    public int64 getValueInt64(str _propertyName)
     {
         try
         {
@@ -109,9 +163,9 @@ class DEVIntegJObject
 ]]></Source>
 			</Method>
 			<Method>
-				<Name>GetValueInt</Name>
+				<Name>getValueInt</Name>
 				<Source><![CDATA[
-    public int GetValueInt(str _propertyName)
+    public int getValueInt(str _propertyName)
     {
         try
         {
@@ -135,9 +189,9 @@ class DEVIntegJObject
 ]]></Source>
 			</Method>
 			<Method>
-				<Name>GetValueReal</Name>
+				<Name>getValueReal</Name>
 				<Source><![CDATA[
-    public real GetValueReal(str _propertyName)
+    public real getValueReal(str _propertyName)
     {
         try
         {
@@ -161,75 +215,130 @@ class DEVIntegJObject
 ]]></Source>
 			</Method>
 			<Method>
-				<Name>GetValueDate</Name>
+				<Name>getValueDate</Name>
 				<Source><![CDATA[
-    public date GetValueDate(str _propertyName)
+    public date getValueDate(str _propertyName, str _formatString = '')
     {
-        try
-        {
-            JToken jToken = this.body.GetValue(_propertyName);
+        TransDate           res;
+        System.DateTime     resValue;
 
-            if (jToken == null)
+        JToken      jToken = this.body.GetValue(_propertyName);
+
+        if (jToken != null)
+        {
+            if (jToken.Type == Newtonsoft.Json.Linq.JTokenType::Date)
             {
-                return dateNull();
+                resValue = jToken;
+                res = resValue;
             }
+            else
+            {
+                str  sDate = jToken.ToString();
+                if (sDate)
+                {
+                    if (_formatString)
+                    {
+                        boolean         parsingOK;
 
-            date res = jToken.Type == JTokenType::Null ? dateNull() : any2Date(jToken.ToString());
+                        parsingOK = System.DateTime::TryParseExact(sDate, _formatString, System.Globalization.CultureInfo::get_InvariantCulture(), System.Globalization.DateTimeStyles::None, byref resValue);
+                        if (! parsingOK)
+                        {
+                            throw error(strFmt("Failed to convert value %1 to a date for %2 JSON property using %3 format",
+                                        sDate, _propertyName, _formatString));
+                        }
+                        res = resValue;
 
-            return res;
+                    }
+                    else
+                    {
+                        res   = System.Convert::ToDateTime(sDate);
+                    }
+                }
+            }
         }
-        catch
-        {
-            return dateNull();
-        }
+        return res;
+       
     }
 
 ]]></Source>
 			</Method>
 			<Method>
-				<Name>GetValueDateTime</Name>
+				<Name>getValueDateTime</Name>
 				<Source><![CDATA[
-    public TransDateTime GetValueDateTime(str _propertyName)
+    public TransDateTime getValueDateTime(str _propertyName, str _formatString = '')
     {
-        TransDateTime res = utcDateTimeNull();
+        TransDateTime   res = utcDateTimeNull();
+        System.DateTime resValue;
 
-        try
+        JToken jToken = this.body.GetValue(_propertyName);
+
+        if (jToken != null)
         {
-            JToken jToken = this.body.GetValue(_propertyName);
-
-            if (jToken != null)
+            //need to check should we always use string
+            if (jToken.Type == Newtonsoft.Json.Linq.JTokenType::Date)
+            {
+                resValue = jToken;
+                res = resValue;
+            }
+            else
             {
                 str  sDate = jToken.ToString();
                 if (sDate)
                 {
-                    res   = System.DateTime::Parse(sDate);
+                    if (_formatString)
+                    {
+                        boolean         parsingOK;
+
+                        parsingOK = System.DateTime::TryParseExact(sDate, _formatString, System.Globalization.CultureInfo::get_InvariantCulture(), System.Globalization.DateTimeStyles::None, byref resValue);
+                        if (! parsingOK)
+                        {
+                            throw error(strFmt("Failed to convert value %1 to a date for %2 JSON property using %3 format",
+                                        sDate, _propertyName, _formatString));
+                        }
+                        res = resValue;
+
+                    }
+                    else
+                    {
+                        res   = System.Convert::ToDateTime(sDate);
+                    }
                 }
             }
         }
-        catch
-        {
-            exceptionTextFallThrough();
-        }
+       
         return res;
     }
 
 ]]></Source>
 			</Method>
 			<Method>
-				<Name>GetValueArray</Name>
+				<Name>getValueArray</Name>
 				<Source><![CDATA[
-    public JArray GetValueArray(str _propertyName)
+    //OBSOLETTE, use readNextArrayItem instead. How to use:
+    //JArray specs = result.GetValueArray('lines');
+    // (specs)
+    //{
+    //    JToken line = specs.First;
+    //    while (line)
+    //    {
+    //        DEVIntegJObject lineJSON = DEVIntegJObject::ParseToken(line);
+    //
+    //        lineJSON.GetValueString('itemId');
+    //        line = line.Next;
+    //    }
+    //}
+    public JArray getValueArray(str _propertyName)
     {
         try
         {
 
             JArray  items = null;
 
-            var arrValue = this.GetValueString(_propertyName);
+            var arrValue = this.body.GetValue(_propertyName);
 
             if (arrValue)
             {
-                items = JArray::Parse(arrValue);
+                items = arrValue;//JArray::Parse(arrValue);
             }
 
             return items;
@@ -243,9 +352,9 @@ class DEVIntegJObject
 ]]></Source>
 			</Method>
 			<Method>
-				<Name>GetValueObject</Name>
+				<Name>getValueObject</Name>
 				<Source><![CDATA[
-    public DEVIntegJObject GetValueObject(str _propertyName)
+    public DEVIntegJObject getValueObject(str _propertyName)
     {
         JToken      jToken = this.body.GetValue(_propertyName);
         DEVIntegJObject res;
@@ -254,6 +363,10 @@ class DEVIntegJObject
         {
             res = jToken.Type == JTokenType::Null ? null : DEVIntegJObject::Parse(jToken.ToString());
         }
+        if (! res)
+        {
+            throw error(strFmt("Can't find %1 property in the document", _propertyName));
+        }
 
         return res;
     }
@@ -261,31 +374,139 @@ class DEVIntegJObject
 ]]></Source>
 			</Method>
 			<Method>
-				<Name>Add</Name>
+				<Name>readNextArrayItem</Name>
 				<Source><![CDATA[
-    public Newtonsoft.Json.Linq.JObject Add(str _propertyName, Newtonsoft.Json.Linq.JToken _propertyValue)
+    //while (headerContract.readNextArrayItem('OrderLines'))
+    //{
+    //    DEVIntegJObject lineJSON = headerContract.getCurrentArrayItemValue();
+    public boolean readNextArrayItem(str _propertyName)
     {
-        Newtonsoft.Json.Linq.JObject bodyLocal = this.body;
-        
-        bodyLocal.Add(_propertyName, _propertyValue);
-        
-        return bodyLocal;
+        boolean  res;
+        if (currentArrayName != _propertyName)
+        {
+            currentArrayName = _propertyName;
+
+            JArray orderLinesAr = this.getValueArray(_propertyName);
+            if (orderLinesAr)
+            {
+                currentArrayElement = orderLinesAr.First;
+                if (currentArrayElement)
+                {
+                    res = true;
+                }
+            }
+        }
+        else
+        {
+            if (currentArrayElement)
+            {
+                currentArrayElement = currentArrayElement.Next;
+                if (currentArrayElement)
+                {
+                    res = true;
+                }
+            }
+        }
+        if (! res)
+        {
+            currentArrayName = "";
+            currentArrayElement = null;
+        }
+        return res;
     }
 
 ]]></Source>
 			</Method>
 			<Method>
-				<Name>AddBoolean</Name>
+				<Name>getCurrentArrayItemValue</Name>
 				<Source><![CDATA[
-    public Newtonsoft.Json.Linq.JObject AddBoolean(str _propertyName, boolean _propertyValue)
+    public DEVIntegJObject getCurrentArrayItemValue()
     {
-        Newtonsoft.Json.Linq.JObject bodyLocal = this.body;
+        DEVIntegJObject res;
+        if (currentArrayElement)
+        {
+            res = DEVIntegJObject::parseToken(currentArrayElement);
+        }
+        return res;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>selectTokenPathStr</Name>
+				<Source><![CDATA[
+    public System.String selectTokenPathStr(str _path)
+    {
+        System.String   textJson;
+        JToken  jToken = body.SelectToken(_path);
         
+        if (jToken == null || jToken.Type == JTokenType::Null)
+        {
+            throw error(strFmt("JSON path '%1' not found in the document", _path));
+        }
+
+        textJson = jToken.ToString();
+
+        return textJson;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>selectTokenPathJSON</Name>
+				<Source><![CDATA[
+    public DEVIntegJObject selectTokenPathJSON(str _path)
+    {
+        DEVIntegJObject res;
+        System.String   textJson;
+
+        textJson = this.selectTokenPathStr(_path);
+        textJson = textJson.Trim();
+
+        if (textJson.StartsWith("```json"))
+        {
+            textJson = textJson.Substring(7);
+        }
+
+        if (textJson.EndsWith("```"))
+        {
+            textJson = textJson.Substring(0, textJson.Length - 3);
+        }
+
+        Newtonsoft.Json.JsonReaderException ex;
+        try
+        {
+            res = DEVIntegJObject::parse(textJson);
+        }
+        catch (ex)
+        {
+            throw error(strFmt("JSON path '%1' contains invalid JSON string: %2", _path, textJson));
+        }
+        return res;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>add</Name>
+				<Source><![CDATA[
+    public void add(str _propertyName, Newtonsoft.Json.Linq.JToken _propertyValue)
+    {
+        body.Add(_propertyName, _propertyValue);
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>addBoolean</Name>
+				<Source><![CDATA[
+    public Newtonsoft.Json.Linq.JObject addBoolean(str _propertyName, boolean _propertyValue)
+    {
         str boolStr = enum2Str(_propertyValue);
         
-        bodyLocal.Add(_propertyName, boolStr);
+        body.Add(_propertyName, boolStr);
     
-        return bodyLocal;
+        return body;
     }
 
 ]]></Source>

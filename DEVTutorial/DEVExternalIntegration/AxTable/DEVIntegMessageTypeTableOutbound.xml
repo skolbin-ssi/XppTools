@@ -525,6 +525,15 @@ public class DEVIntegMessageTypeTableOutbound extends common
 				<AxTableFieldGroupField>
 					<DataField>IsFullExport</DataField>
 				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>ClassName</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>ConnectionTypeId</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>IsEnabled</DataField>
+				</AxTableFieldGroupField>
 			</Fields>
 		</AxTableFieldGroup>
 		<AxTableFieldGroup>
@@ -597,6 +606,9 @@ public class DEVIntegMessageTypeTableOutbound extends common
 				<AxTableFieldGroupField>
 					<DataField>CompanyRange</DataField>
 				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>IsClearCacheBeforeRun</DataField>
+				</AxTableFieldGroupField>
 			</Fields>
 		</AxTableFieldGroup>
 		<AxTableFieldGroup>
@@ -650,6 +662,21 @@ public class DEVIntegMessageTypeTableOutbound extends common
 				</AxTableFieldGroupField>
 				<AxTableFieldGroupField>
 					<DataField>EmailCC</DataField>
+				</AxTableFieldGroupField>
+			</Fields>
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>ExportParameters</Name>
+			<Label>Export parameters</Label>
+			<Fields>
+				<AxTableFieldGroupField>
+					<DataField>ParmNumberOfLinesInOneMessage</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>IsSkipEmptyMessages</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>IsIncludeHeader</DataField>
 				</AxTableFieldGroupField>
 			</Fields>
 		</AxTableFieldGroup>
@@ -708,8 +735,9 @@ public class DEVIntegMessageTypeTableOutbound extends common
 		<AxTableField xmlns=""
 			i:type="AxTableFieldString">
 			<Name>AzureShareReference</Name>
-			<ExtendedDataType>FolderName</ExtendedDataType>
+			<ExtendedDataType>DEVIntegFolderName</ExtendedDataType>
 			<HelpText>Share reference for Azure storage</HelpText>
+			<IgnoreEDTRelation>Yes</IgnoreEDTRelation>
 			<Label>Share reference</Label>
 		</AxTableField>
 		<AxTableField xmlns=""
@@ -791,6 +819,38 @@ public class DEVIntegMessageTypeTableOutbound extends common
 			i:type="AxTableFieldString">
 			<Name>EmailTemplateId</Name>
 			<ExtendedDataType>SysEmailId</ExtendedDataType>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldInt">
+			<Name>ParmNumberOfLinesInOneMessage</Name>
+			<ExtendedDataType>PositiveNumber</ExtendedDataType>
+			<HelpText>Split messages to this number of lines</HelpText>
+			<IgnoreEDTRelation>Yes</IgnoreEDTRelation>
+			<Label>Lines in one message</Label>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldEnum">
+			<Name>IsClearCacheBeforeRun</Name>
+			<ExtendedDataType>NoYesId</ExtendedDataType>
+			<HelpText>Clear all system caches before operation execution</HelpText>
+			<Label>Clear cache before run</Label>
+			<EnumType>NoYes</EnumType>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldEnum">
+			<Name>IsSkipEmptyMessages</Name>
+			<ExtendedDataType>NoYesId</ExtendedDataType>
+			<HelpText>Do not send messages with no lines in data section</HelpText>
+			<Label>Skip empty messages</Label>
+			<EnumType>NoYes</EnumType>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldEnum">
+			<Name>IsIncludeHeader</Name>
+			<ExtendedDataType>NoYesId</ExtendedDataType>
+			<HelpText>Include headers to the resulting export file</HelpText>
+			<Label>Include header</Label>
+			<EnumType>NoYes</EnumType>
 		</AxTableField>
 	</Fields>
 	<FullTextIndexes />

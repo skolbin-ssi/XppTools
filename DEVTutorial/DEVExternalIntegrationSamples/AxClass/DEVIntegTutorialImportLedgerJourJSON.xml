@@ -278,7 +278,21 @@ class DEVIntegTutorialImportLedgerJourJSON extends DEVIntegProcessMessageBase
         DEVIntegTutorialLedgerHeaderLinesContract   tutorialGLHeaderLinesContract;
         
         str serializedJSONstr;
-        serializedJSONstr = messageTable.getDataString();
+        if (messageTable.messageTypeTable().isFileBasedConnection())
+        {
+            System.IO.MemoryStream  fileStream = messageTable.getFileStream();
+            if (! fileStream)
+            {
+                throw error(strFmt("File %1 is empty", messageTable.Name));
+            }
+            System.IO.StreamReader reader = new System.IO.StreamReader(fileStream);
+            serializedJSONstr = reader.ReadToEnd();
+
+        }
+        else
+        {
+            serializedJSONstr = messageTable.getDataString();
+        }
         if (! serializedJSONstr)
         {
             throw error(strFmt("Message %1 is empty", messageTable.Name));
@@ -343,6 +357,23 @@ class DEVIntegTutorialImportLedgerJourJSON extends DEVIntegProcessMessageBase
     {
         _viewStagingButtonControl.visible(_messageTable.IsParsed);
         _viewStagingButtonControl.menuItemName(menuItemDisplayStr(DEVIntegTutorialLedgerJourHeaderStaging));
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>getVisibleInboundMessageFields</Name>
+				<Source><![CDATA[
+    public container getVisibleInboundMessageFields()
+    {
+        container c = super();
+
+        c += [fieldNum(DEVIntegMessageTypeInbound, LedgerJournalNameId),
+              fieldNum(DEVIntegMessageTypeInbound, IsAutoPostJournal),
+              fieldNum(DEVIntegMessageTypeInbound, IsGroupByDescription)
+            ];
+
+        return c;
     }
 
 ]]></Source>
